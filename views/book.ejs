@@ -1,0 +1,39 @@
+<%- include('partials/header') %>
+
+<section class="page-hero">
+  <div class="container">
+    <span class="section-kicker">Appointment</span>
+    <h1>Book Your Dental Appointment</h1>
+    <p>Fill in your details and the clinic team can contact you to confirm your visit.</p>
+  </div>
+</section>
+
+<section class="container section narrow">
+  <% if (error) { %><div class="alert alert-error"><%= error %></div><% } %>
+  <form action="/book" method="POST" class="form-card">
+    <label>Full Name *<input type="text" name="patientName" required value="<%= typeof patientName !== 'undefined' ? patientName : '' %>" /></label>
+    <label>Phone Number *<input type="tel" name="phone" required placeholder="03XXXXXXXXX" /></label>
+    <label>Service *<select name="service" id="serviceSelect" required><option value="" disabled selected>Select a service</option><% services.forEach(function(s) { %><option value="<%= s.name %>" data-price="<%= s.price %>"><%= s.name %> — Rs. <%= Number(s.price || 0).toLocaleString('en-PK') %></option><% }) %></select></label>
+    <div class="booking-total"><span>Total Price</span><strong id="totalPrice">Rs. 0</strong></div>
+    <label>Preferred Date *<input type="date" name="preferredDate" required /></label>
+    <label>Preferred Doctor (optional)<select name="doctor"><option value="">No preference</option><% doctors.forEach(function(doc) { %><option value="<%= doc._id %>"><%= doc.name %> - <%= doc.specialty %></option><% }) %></select></label>
+    <button type="submit" class="btn btn-primary btn-lg">Submit Appointment Request</button>
+  </form>
+  <script>
+    document.querySelector('input[name="preferredDate"]').min = new Date().toISOString().split('T')[0];
+    const serviceSelect = document.getElementById('serviceSelect');
+    const totalPrice = document.getElementById('totalPrice');
+    function updateTotalPrice() {
+      const option = serviceSelect.options[serviceSelect.selectedIndex];
+      const price = option ? Number(option.dataset.price || 0) : 0;
+      totalPrice.textContent = 'Rs. ' + price.toLocaleString('en-PK');
+    }
+    serviceSelect.addEventListener('change', updateTotalPrice);
+  </script>
+  <div class="whatsapp-booking">
+    <div><strong>Prefer WhatsApp?</strong><span>Send an appointment request directly to the clinic.</span></div>
+    <a href="https://wa.me/923370401215?text=Hello%20H.I.K.S%20Dental%20Studio%2C%20I%20would%20like%20to%20book%20an%20appointment." target="_blank" rel="noopener" class="btn btn-whatsapp">Book on WhatsApp</a>
+  </div>
+</section>
+
+<%- include('partials/footer') %>

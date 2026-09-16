@@ -1,0 +1,49 @@
+<%- include('../partials/admin-header') %>
+
+<div class="page-header">
+  <div>
+    <h1>Clinic Gallery</h1>
+    <p class="muted">Upload real photos of the H.I.K.S Dental Studio clinic, rooms, equipment and facilities. This gallery is separate from Treatment Results.</p>
+  </div>
+</div>
+
+<% if (error) { %>
+  <div class="alert alert-error"><%= error %></div>
+<% } %>
+
+<form action="/admin/clinic-gallery" method="POST" enctype="multipart/form-data" class="form-card">
+  <label>
+    Photo Title *
+    <input type="text" name="title" required placeholder="e.g. Clinic Reception" />
+  </label>
+
+  <label>
+    Clinic Photo *
+    <input type="file" name="photo" required accept="image/jpeg,image/png,image/webp,image/gif" />
+    <small class="form-help">JPG, PNG, WEBP or GIF. Maximum 5MB. The image is uploaded through the server to Cloudinary.</small>
+  </label>
+
+  <button type="submit" class="btn btn-primary">Upload Clinic Photo</button>
+</form>
+
+<h2 class="admin-section-title">Uploaded Clinic Photos</h2>
+<% if (!photos.length) { %>
+  <div class="card empty-card">No clinic photos uploaded yet.</div>
+<% } else { %>
+  <div class="admin-photo-grid">
+    <% photos.forEach(function(photo) { %>
+      <article class="admin-photo-card">
+        <img src="<%= photo.imageUrl %>" alt="<%= photo.title %>" />
+        <div class="admin-photo-meta">
+          <strong><%= photo.title %></strong>
+          <span>Clinic Gallery</span>
+          <form action="/admin/clinic-gallery/<%= photo._id %>/delete" method="POST" onsubmit="return confirm('Delete this clinic photo?');">
+            <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+          </form>
+        </div>
+      </article>
+    <% }) %>
+  </div>
+<% } %>
+
+<%- include('../partials/admin-footer') %>

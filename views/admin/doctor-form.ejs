@@ -1,0 +1,41 @@
+<%- include('../partials/admin-header') %>
+
+<h1><%= doctor && doctor._id ? 'Edit Doctor' : 'Add Doctor' %></h1>
+
+<% if (error) { %>
+  <div class="alert alert-error"><%= error %></div>
+<% } %>
+
+<form action="<%= doctor && doctor._id ? '/admin/doctors/' + doctor._id : '/admin/doctors' %>" method="POST" class="form-card">
+  <label>
+    Name *
+    <input type="text" name="name" required value="<%= doctor ? doctor.name : '' %>" />
+  </label>
+
+  <label>
+    Specialty *
+    <input type="text" name="specialty" required value="<%= doctor ? doctor.specialty : '' %>" />
+  </label>
+
+  <label>
+    Photo URL
+    <input type="text" name="photoUrl" placeholder="https://..." value="<%= doctor ? doctor.photoUrl : '' %>" />
+  </label>
+
+  <label>
+    Bio
+    <textarea name="bio" rows="4"><%= doctor ? doctor.bio : '' %></textarea>
+  </label>
+
+  <label class="checkbox-label">
+    <input type="checkbox" name="active" <%= !doctor || doctor.active ? 'checked' : '' %> />
+    Active (visible on public website)
+  </label>
+
+  <div class="form-actions">
+    <button type="submit" class="btn btn-primary">Save Doctor</button>
+    <a href="/admin/doctors" class="btn btn-outline">Cancel</a>
+  </div>
+</form>
+
+<%- include('../partials/admin-footer') %>

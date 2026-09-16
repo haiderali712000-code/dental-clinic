@@ -1,0 +1,244 @@
+<%- include('partials/header') %>
+
+<section class="hero-reference" id="home">
+  <div class="hero-bg-glow"></div>
+  <div class="container hero-reference-grid">
+    <div class="hero-copy-reference">
+      <span class="eyebrow-pill">YOUR TRUSTED DENTAL CARE PARTNER</span>
+      <h1>A Brighter,<br><span>Healthier Smile</span><br>Starts Here</h1>
+      <p class="hero-lead">Advanced dental care with modern technology for you and your family.</p>
+      <div class="hero-feature-row">
+        <span><b>✦</b> Experienced<br>Dental Surgeon</span>
+        <span><b>✦</b> Modern Equipment<br>& Technology</span>
+        <span><b>✓</b> Painless & Safe<br>Procedures</span>
+        <span><b>♙</b> Sterilized &<br>Hygienic Environment</span>
+      </div>
+      <div class="hero-actions">
+        <a href="/book" class="btn btn-primary btn-lg">▣ &nbsp; Book Appointment</a>
+        <a href="https://wa.me/923370401215?text=Hello%20H.I.K.S%20Dental%20Studio%2C%20I%20would%20like%20to%20book%20an%20appointment." target="_blank" rel="noopener" class="btn btn-whatsapp btn-lg">◉ &nbsp; Chat on WhatsApp</a>
+      </div>
+    </div>
+    <div class="hero-photo-wrap">
+      <img src="/images/hero-treatment.jpg" alt="Dental treatment at H.I.K.S Dental Studio" class="hero-photo" />
+      <div class="hero-script">Confident<br>Smiles<br>Brighter<br>Futures</div>
+      <div class="hero-side-copy"><strong>GENTLE CARE</strong><span>EXPERT RESULTS</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="trust-bar-wrap">
+  <div class="container trust-bar">
+    <div><strong>1000+</strong><span>Happy Patients</span></div>
+    <div><strong>✦</strong><span>Modern<br>Dental Equipment</span></div>
+    <div><strong>✓</strong><span>Sterilized<br>& Safe Environment</span></div>
+    <div><strong>♥</strong><span>Quality Care<br>At Affordable Prices</span></div>
+  </div>
+</section>
+
+<section class="offer-ribbon" id="offers">
+  <div class="container offer-ribbon-inner">
+    <div><span>Special Opening Offer</span><strong>FREE DENTAL CHECK-UP</strong></div>
+    <div class="offer-big">20% OFF <small>on Selected Dental Treatments</small></div>
+    <a href="/book" class="btn btn-gold">Book Offer →</a>
+  </div>
+</section>
+
+<section class="section reference-section" id="services">
+  <div class="container">
+    <div class="section-heading reference-heading">
+      <div><span class="section-kicker">✚ OUR SERVICES</span><h2>Complete Dental Care Under One Roof</h2></div>
+      <a href="#services" class="text-link">View All Services →</a>
+    </div>
+    <div class="service-reference-grid">
+      <% services.forEach(function(s) { %>
+        <article class="service-reference-card">
+          <div class="service-icon"><span><%= s.icon %></span></div>
+          <h3><%= s.name %></h3>
+          <p><%= s.description %></p>
+        </article>
+      <% }) %>
+    </div>
+  </div>
+</section>
+
+<section class="section about-reference" id="about">
+  <div class="container about-grid-reference">
+    <div class="about-copy-reference">
+      <span class="section-kicker">ABOUT H.I.K.S DENTAL STUDIO</span>
+      <h2>Your Smile is Our Priority</h2>
+      <p>H.I.K.S Dental Studio ایک modern, professional اور patient-focused dental studio ہے جہاں مریضوں کو معیاری dental care، جدید equipment، proper sterilization اور comfortable environment فراہم کرنے پر توجہ دی جاتی ہے۔</p>
+      <p>ہماری کوشش ہے کہ ہر patient کو محفوظ، صاف ستھرے اور professional ماحول میں بہتر dental treatment فراہم کیا جائے۔</p>
+      <div class="mini-features"><span>♡ Comfortable Environment</span><span>▦ Personalized Treatment Plans</span><span>♙ Patient-Focused Approach</span></div>
+      <a href="#why-us" class="btn btn-primary">Learn More About Us →</a>
+    </div>
+    <div class="doctor-offer-column">
+      <article class="doctor-card-reference about-doctor-preview">
+        <% if (doctors && doctors.length) { %>
+          <% const firstDoctor = doctors[0]; %>
+          <img src="<%= firstDoctor.photoUrl || '/images/doctor-haffi-ur-rehman.jpg' %>" alt="<%= firstDoctor.name %>" class="doctor-photo-reference" />
+          <span class="profile-label">OUR DOCTOR</span>
+          <h3><%= firstDoctor.name %></h3>
+          <p class="doctor-qualification"><%= firstDoctor.specialty %></p>
+          <p><%= firstDoctor.bio || 'Dedicated to healthy & beautiful smiles through professional, patient-focused dental care.' %></p>
+          <a href="/doctors" class="btn btn-outline doctor-view-all">View All Doctors →</a>
+        <% } else { %>
+          <div class="doctor-empty">
+            <span class="profile-label">OUR DOCTORS</span>
+            <h3>Meet Our Dental Team</h3>
+            <p>Doctor profiles will appear here once added from the admin panel.</p>
+            <a href="/doctors" class="btn btn-outline doctor-view-all">View All Doctors →</a>
+          </div>
+        <% } %>
+      </article>
+      <article class="offer-card-reference">
+        <div class="offer-card-copy"><span>SPECIAL OFFER</span><strong>20%</strong><b>OFF</b><small>on Selected Dental Treatments</small><a href="/book" class="btn btn-primary">View Offers →</a></div>
+        <div class="smile-art" aria-hidden="true">😁</div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section class="section doctors-preview-section" id="doctor">
+  <div class="container">
+    <div class="section-heading reference-heading">
+      <div>
+        <span class="section-kicker">OUR DOCTORS</span>
+        <h2>Meet Our Dental Team</h2>
+        <p class="section-subtitle">Professional care from our dedicated dental team.</p>
+      </div>
+      <a href="/doctors" class="text-link">View All Doctors →</a>
+    </div>
+    <% if (doctors && doctors.length) { %>
+      <% const firstDoctor = doctors[0]; %>
+      <article class="doctor-feature-card">
+        <div class="doctor-feature-photo-wrap">
+          <img src="<%= firstDoctor.photoUrl || '/images/doctor-haffi-ur-rehman.jpg' %>" alt="<%= firstDoctor.name %>" class="doctor-feature-photo" />
+        </div>
+        <div class="doctor-feature-content">
+          <span class="profile-label">DENTAL SURGEON</span>
+          <h3><%= firstDoctor.name %></h3>
+          <p class="doctor-qualification"><%= firstDoctor.specialty %></p>
+          <p><%= firstDoctor.bio || 'Dedicated to providing professional, patient-focused dental care and healthy, confident smiles.' %></p>
+          <div class="doctor-feature-meta">
+            <span>Professional Care</span>
+            <span>Patient-focused</span>
+            <span>Modern Dental Setup</span>
+          </div>
+          <a href="/doctors" class="btn btn-primary">View All Doctors →</a>
+        </div>
+      </article>
+    <% } else { %>
+      <div class="doctor-empty doctors-empty-large">
+        <h3>Our Dental Doctors</h3>
+        <p>Doctor profiles will appear here once they are added from the admin panel.</p>
+        <a href="/doctors" class="btn btn-primary">View All Doctors →</a>
+      </div>
+    <% } %>
+  </div>
+</section>
+
+<section class="section section-light-blue" id="why-us">
+  <div class="container">
+    <div class="section-heading reference-heading">
+      <div><span class="section-kicker">WHY CHOOSE H.I.K.S?</span><h2>Modern Care. Safe Treatment. Better Experience.</h2></div>
+    </div>
+    <div class="why-reference-grid">
+      <article><span>✦</span><h3>Modern Dental Equipment</h3><p>Professional equipment and a contemporary clinical setup.</p></article>
+      <article><span>✓</span><h3>Proper Sterilization</h3><p>Instrument sterilization and infection-control are given special importance.</p></article>
+      <article><span>◎</span><h3>Ultrasonic Scaling</h3><p>Professional scaling equipment for effective cleaning and polishing.</p></article>
+      <article><span>▣</span><h3>Dental X-Ray Facility</h3><p>Convenient diagnostic imaging facility highlighted as part of the studio setup.</p></article>
+      <article><span>♡</span><h3>Clean & Comfortable</h3><p>A hygienic, calm and welcoming environment for patients.</p></article>
+      <article><span>♙</span><h3>Patient-focused Care</h3><p>Clear communication, comfort and individual treatment planning.</p></article>
+    </div>
+  </div>
+</section>
+
+<section class="section safety-reference" id="safety">
+  <div class="container safety-reference-grid">
+    <div class="safety-visual"><span>✓</span><small>INFECTION<br>CONTROL</small></div>
+    <div>
+      <span class="section-kicker">STERILIZATION & SAFETY</span>
+      <h2>Safety is part of every treatment.</h2>
+      <p>ہم instruments کی proper sterilization اور infection-control کو خاص اہمیت دیتے ہیں تاکہ treatment environment صاف، محفوظ اور professional رہے۔</p>
+      <div class="equipment-callout"><strong>Takazono Sangyo (Japan)</strong><span>MC-R220 Automatic High-Pressure Steam Sterilizer</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="section pricing-reference">
+  <div class="container pricing-reference-grid">
+    <div><span class="section-kicker">SCALING & POLISHING</span><h2>Professional cleaning with transparent pricing.</h2><p>Quality treatment, proper sterilization, hygienic environment and professional setup.</p></div>
+    <div class="price-reference-card"><span>STANDARD RATE</span><strong>Rs. 5,000</strong><small>Scaling & Polishing</small><a href="/book" class="btn btn-primary">Book This Treatment</a></div>
+  </div>
+</section>
+
+<section class="section gallery-reference" id="gallery">
+  <div class="container">
+    <div class="section-heading reference-heading"><div><span class="section-kicker">CLINIC GALLERY</span><h2>Take a Look at Our Clinic</h2></div><span class="text-link">Real clinic photos</span></div>
+    <div class="gallery-reference-grid">
+      <% if (clinicGallery && clinicGallery.length) { %>
+        <% clinicGallery.forEach(function(photo) { %>
+          <figure><img src="<%= photo.imageUrl %>" alt="<%= photo.title %>" loading="lazy"><figcaption><%= photo.title %></figcaption></figure>
+        <% }) %>
+      <% } else { %>
+        <figure><img src="/images/clinic-reception.jpg" alt="H.I.K.S Dental Studio clinic reception"><figcaption>Clinic Reception</figcaption></figure>
+        <figure><img src="/images/dental-unit.jpg" alt="H.I.K.S Dental Studio dental unit"><figcaption>Dental Unit</figcaption></figure>
+        <figure><img src="/images/sterilization-room.jpg" alt="H.I.K.S Dental Studio sterilization room"><figcaption>Sterilization Room</figcaption></figure>
+        <figure><img src="/images/modern-equipment.jpg" alt="H.I.K.S Dental Studio modern equipment"><figcaption>Modern Equipment</figcaption></figure>
+      <% } %>
+    </div>
+  </div>
+</section>
+
+<section class="section testimonials-reference" id="testimonials">
+  <div class="container">
+    <div class="section-heading reference-heading"><div><span class="section-kicker">PATIENT TESTIMONIALS</span><h2>What Our Patients Say</h2></div></div>
+    <div class="testimonial-card"><div class="quote-mark">“</div><div><p>Patient reviews can be displayed here once verified reviews are provided by the clinic.</p><span class="review-note">Only genuine patient feedback should be published.</span></div></div>
+  </div>
+</section>
+
+<section class="section before-after-reference" id="before-after">
+  <div class="container">
+    <div class="section-heading reference-heading"><div><span class="section-kicker">BEFORE & AFTER</span><h2>Treatment Results Gallery</h2><p>Dedicated space for clinic-approved before/after cases.</p></div></div>
+    <div class="before-after-grid">
+      <% if (treatmentResults && treatmentResults.length) { %>
+        <% treatmentResults.forEach(function(result) { %>
+          <article>
+            <div class="ba-result-photo"><img src="<%= result.imageUrl %>" alt="<%= result.title %> - <%= result.treatment %> treatment result" loading="lazy" /></div>
+            <h3><%= result.treatment %></h3>
+            <p><%= result.title %></p>
+          </article>
+        <% }) %>
+      <% } else { %>
+        <% ['Scaling','Whitening','RCT','Crowns','Implants','Cosmetic Dentistry'].forEach(function(item) { %>
+          <article><div class="ba-placeholder"><span><%= item %></span><small>Before → After</small></div><h3><%= item %></h3><p>Clinic case photos can be added here.</p></article>
+        <% }) %>
+      <% } %>
+    </div>
+  </div>
+</section>
+
+<section class="section faq-reference" id="faq">
+  <div class="container faq-grid">
+    <div><span class="section-kicker">FREQUENTLY ASKED QUESTIONS</span><h2>Dental questions, answered simply.</h2><p>General information is provided for education. Your dentist can advise you based on your individual condition.</p></div>
+    <div class="faq-list">
+      <details><summary>RCT کیا ہے؟</summary><p>Root canal treatment is a procedure used to remove infected or inflamed tissue from inside a tooth, clean the canals and seal them to help preserve the tooth.</p></details>
+      <details><summary>Scaling سے دانت خراب ہوتے ہیں؟</summary><p>Professional scaling removes plaque and calculus from tooth surfaces. It does not normally damage healthy enamel when performed appropriately by a dental professional.</p></details>
+      <details><summary>Dental implant کتنے عرصے چلتا ہے؟</summary><p>Implant longevity varies with oral health, bone support, hygiene, habits and maintenance. Regular dental follow-up helps monitor the implant and surrounding tissues.</p></details>
+      <details><summary>Whitening safe ہے؟</summary><p>Professionally supervised whitening is generally considered safe when appropriate for the patient. Temporary sensitivity or gum irritation can occur.</p></details>
+      <details><summary>Wisdom tooth کب نکالنا چاہیے؟</summary><p>Removal may be considered when a wisdom tooth causes repeated infection, pain, damage, decay or other clinically significant problems. Assessment and imaging help determine the need.</p></details>
+      <details><summary>بچوں کا dental check-up کب شروع کرنا چاہیے؟</summary><p>Children should have their first dental visit by the first birthday or when the first tooth appears, followed by regular preventive visits as advised.</p></details>
+    </div>
+  </div>
+</section>
+
+<section class="section contact-reference" id="contact">
+  <div class="container contact-reference-grid">
+    <div><span class="section-kicker">CONTACT H.I.K.S DENTAL STUDIO</span><h2>Book your visit with confidence.</h2><p>Canal Road, Mandi Bahauddin<br>Near Muzamil Masjid<br>Near Old Ghegha Mill</p><p><strong>Clinic Timing:</strong> 12:00 PM – 8:00 PM</p><div class="contact-reference-actions"><a href="tel:03370401215" class="btn btn-primary">☎ Call Now</a><a href="https://wa.me/923370401215?text=Hello%20H.I.K.S%20Dental%20Studio%2C%20I%20would%20like%20to%20book%20an%20appointment." target="_blank" rel="noopener" class="btn btn-whatsapp">◉ WhatsApp</a></div></div>
+    <div class="map-card"><iframe title="H.I.K.S Dental Studio map" src="https://www.google.com/maps?q=H.I.K.S%20Dental%20Studio%20Canal%20Road%20Mandi%20Bahauddin%20Near%20Muzamil%20Masjid%20Near%20Old%20Ghegha%20Mill&output=embed" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe><a class="btn btn-primary full-width" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=H.I.K.S+Dental+Studio+Canal+Road+Mandi+Bahauddin+Near+Muzamil+Masjid+Near+Old+Ghegha+Mill">Find Us on Google Maps →</a></div>
+  </div>
+</section>
+
+<div class="floating-actions" aria-label="Quick contact actions"><a href="https://wa.me/923370401215?text=Hello%20H.I.K.S%20Dental%20Studio%2C%20I%20would%20like%20to%20book%20an%20appointment." target="_blank" rel="noopener" class="floating-whatsapp">WhatsApp</a><a href="tel:03370401215" class="floating-call">Call Now</a></div>
+
+<%- include('partials/footer') %>

@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title><%= title %> | Admin</title>
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body class="admin-body">
+  <div class="admin-layout">
+    <aside class="admin-sidebar">
+      <div class="admin-logo">H.I.K.S Dental Studio<br><small>Admin Panel</small></div>
+      <nav>
+        <a href="/admin/dashboard">Dashboard</a>
+        <a href="/admin/doctors">Doctors</a>
+        <a href="/admin/services">Services</a>
+        <a href="/admin/gallery">Treatment Results</a>
+        <a href="/admin/clinic-gallery">Clinic Gallery</a>
+        <a href="/admin/appointments">Appointments</a>
+        <a href="/" target="_blank">View Website</a>
+      </nav>
+      <form action="/admin/logout" method="POST" class="logout-form">
+        <button type="submit" class="btn btn-outline full-width">Log Out</button>
+      </form>
+    </aside>
+    <main class="admin-main">
+      <div class="container">

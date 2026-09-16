@@ -1,0 +1,69 @@
+<%- include('../partials/admin-header') %>
+
+<div class="page-header">
+  <div>
+    <h1>Treatment Results Gallery</h1>
+    <p class="muted">Upload real, clinic-approved treatment result photos. Images are stored in Cloudinary and can be shown on the public Treatment Results Gallery.</p>
+  </div>
+</div>
+
+<% if (error) { %>
+  <div class="alert alert-error"><%= error %></div>
+<% } %>
+
+<form action="/admin/gallery" method="POST" enctype="multipart/form-data" class="form-card">
+  <label>
+    Photo Title *
+    <input type="text" name="title" required placeholder="e.g. Scaling Result - Case 01" />
+  </label>
+
+  <label>
+    Gallery Type *
+    <select name="category" required>
+      <option value="Treatment Results" selected>Treatment Results</option>
+    </select>
+  </label>
+
+  <label>
+    Treatment *
+    <select name="treatment" required>
+      <option value="Scaling">Scaling</option>
+      <option value="Whitening">Whitening</option>
+      <option value="RCT">RCT</option>
+      <option value="Crowns">Crowns</option>
+      <option value="Implants">Implants</option>
+      <option value="Cosmetic Dentistry">Cosmetic Dentistry</option>
+      <option value="Other">Other</option>
+    </select>
+  </label>
+
+  <label>
+    Treatment Result Photo *
+    <input type="file" name="photo" required accept="image/jpeg,image/png,image/webp,image/gif" />
+    <small class="form-help">JPG, PNG, WEBP or GIF. Maximum 5MB. The image is uploaded through the server to Cloudinary.</small>
+  </label>
+
+  <button type="submit" class="btn btn-primary">Upload Treatment Result</button>
+</form>
+
+<h2 class="admin-section-title">Uploaded Treatment Results</h2>
+<% if (!photos.length) { %>
+  <div class="card empty-card">No treatment result photos uploaded yet.</div>
+<% } else { %>
+  <div class="admin-photo-grid">
+    <% photos.forEach(function(photo) { %>
+      <article class="admin-photo-card">
+        <img src="<%= photo.imageUrl %>" alt="<%= photo.title %>" />
+        <div class="admin-photo-meta">
+          <strong><%= photo.title %></strong>
+          <span><%= photo.category %><% if (photo.treatment && photo.category === 'Treatment Results') { %> · <%= photo.treatment %><% } %></span>
+          <form action="/admin/gallery/<%= photo._id %>/delete" method="POST" onsubmit="return confirm('Delete this photo?');">
+            <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+          </form>
+        </div>
+      </article>
+    <% }) %>
+  </div>
+<% } %>
+
+<%- include('../partials/admin-footer') %>

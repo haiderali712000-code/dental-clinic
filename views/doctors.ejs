@@ -1,0 +1,39 @@
+<%- include('partials/header') %>
+
+<section class="page-hero-simple">
+  <div class="container">
+    <span class="section-kicker">H.I.K.S DENTAL STUDIO</span>
+    <h1>Our Doctors</h1>
+    <p>Meet the dental professionals dedicated to your care and confident smile.</p>
+  </div>
+</section>
+
+<section class="section doctors-list-section">
+  <div class="container">
+    <% if (doctors && doctors.length) { %>
+      <div class="doctors-list-grid">
+        <% doctors.forEach(function(doc) { %>
+          <article class="doctor-profile-card">
+            <div class="doctor-profile-photo-wrap">
+              <img src="<%= doc.photoUrl || '/images/doctor-haffi-ur-rehman.jpg' %>" alt="<%= doc.name %>" class="doctor-profile-photo" />
+            </div>
+            <div class="doctor-profile-body">
+              <span class="profile-label">DENTAL SURGEON</span>
+              <h2><%= doc.name %></h2>
+              <p class="doctor-qualification"><%= doc.specialty %></p>
+              <p><%= doc.bio || 'Professional, patient-focused dental care.' %></p>
+              <a href="/book" class="btn btn-primary">Book Appointment →</a>
+            </div>
+          </article>
+        <% }) %>
+      </div>
+    <% } else { %>
+      <div class="doctor-empty">
+        <h2>Our Doctors</h2>
+        <p>No doctor profiles are currently available.</p>
+      </div>
+    <% } %>
+  </div>
+</section>
+
+<%- include('partials/footer') %>

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="H.I.K.S Dental Studio in Mandi Bahauddin — modern dental care, professional hygiene, sterilization, dental X-Ray and patient-focused treatment on Canal Road." />
+  <meta name="keywords" content="H.I.K.S Dental Studio, Dentist in Mandi Bahauddin, Dental Studio in Mandi Bahauddin, Dentist near Canal Road Mandi Bahauddin, Scaling Mandi Bahauddin, RCT Mandi Bahauddin" />
+  <meta name="robots" content="index,follow,max-image-preview:large" />
+  <meta name="theme-color" content="#0B1F3A" />
+  <link rel="canonical" href="<%= typeof canonicalUrl !== 'undefined' ? canonicalUrl : '' %>" />
+  <meta property="og:title" content="<%= title %> | H.I.K.S Dental Studio" />
+  <meta property="og:description" content="Crafting Confident Smiles — professional dental care in Mandi Bahauddin." />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="/images/hiks-logo.png" />
+  <title><%= title %> | H.I.K.S Dental Studio</title>
+  <link rel="icon" type="image/png" href="/images/hiks-logo.png" />
+  <link rel="stylesheet" href="/css/style.css" />
+  <% if (title === 'Home') { %>
+  <script type="application/ld+json">
+  <%- JSON.stringify({
+    '@context': 'https://schema.org',
+    '@type': 'Dentist',
+    name: 'H.I.K.S Dental Studio',
+    slogan: 'Crafting Confident Smiles',
+    telephone: '+923370401215',
+    address: { '@type': 'PostalAddress', streetAddress: 'Canal Road, Near Muzamil Masjid, Near Old Ghegha Mill', addressLocality: 'Mandi Bahauddin', addressCountry: 'PK' },
+    openingHours: 'Mo-Sa 12:00-20:00',
+    priceRange: 'Rs. 5,000+',
+    url: canonicalUrl || ''
+  }) %>
+  </script>
+  <% } %>
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="/#home" class="brand" aria-label="H.I.K.S Dental Studio home">
+        <img src="/images/hiks-tooth-logo.png" alt="H.I.K.S Dental Studio tooth logo" />
+      </a>
+      <button class="nav-toggle" type="button" aria-label="Open menu" aria-expanded="false" onclick="toggleNav()">☰</button>
+      <nav class="main-nav" id="mainNav">
+        <a href="/#home">Home</a>
+        <a href="/#about">About</a>
+        <a href="/#services">Services</a>
+        <a href="/#doctor">Our Doctors</a>
+        <a href="/#gallery">Gallery</a>
+        <a href="/#offers">Offers</a>
+        <a href="/#contact">Contact</a>
+      </nav>
+      <a href="/book" class="btn btn-primary header-cta">▣ &nbsp; Book Appointment</a>
+    </div>
+  </header>
+  <main>
