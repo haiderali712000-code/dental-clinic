@@ -6,7 +6,12 @@
   <div class="alert alert-error"><%= error %></div>
 <% } %>
 
-<form action="<%= doctor && doctor._id ? '/admin/doctors/' + doctor._id : '/admin/doctors' %>" method="POST" class="form-card">
+<form
+  action="<%= doctor && doctor._id ? '/admin/doctors/' + doctor._id : '/admin/doctors' %>"
+  method="POST"
+  enctype="multipart/form-data"
+  class="form-card"
+>
   <label>
     Name *
     <input type="text" name="name" required value="<%= doctor ? doctor.name : '' %>" />
@@ -18,9 +23,20 @@
   </label>
 
   <label>
-    Photo URL
-    <input type="text" name="photoUrl" placeholder="https://..." value="<%= doctor ? doctor.photoUrl : '' %>" />
+    Doctor Photo
+    <input type="file" name="photo" accept="image/jpeg,image/png,image/webp,image/gif" />
   </label>
+
+  <% if (doctor && doctor.photoUrl) { %>
+    <div style="margin: 10px 0 18px;">
+      <p class="muted">Current Photo:</p>
+      <img
+        src="<%= doctor.photoUrl %>"
+        alt="<%= doctor.name %>"
+        style="width:120px;height:120px;object-fit:cover;border-radius:10px;"
+      />
+    </div>
+  <% } %>
 
   <label>
     Bio

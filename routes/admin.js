@@ -86,22 +86,38 @@ router.get('/doctors/new', (req, res) => {
   res.render('admin/doctor-form', { title: 'Add Doctor', doctor: null, error: null });
 });
 
-router.post('/doctors', async (req, res) => {
+router.post('/doctors', upload.single('photo'), async (req, res) => {
   try {
-    const { name, specialty, photoUrl, bio, active } = req.body;
+    const { name, specialty, bio, active } = req.body;
+
+    if (!name || !specialty) {
+      throw new Error('Name and specialty are required.');
+    }
+
+    let photoUrl = '';
+
+    if (req.file) {
+      const uploaded = await uploadBuffer(
+        req.file.buffer,
+        'hiks-dental/doctors'
+      );
+      photoUrl = uploaded.secure_url;
+    }
+
     await Doctor.create({
       name,
       specialty,
-      photoUrl: photoUrl || '',
+      photoUrl,
       bio: bio || '',
       active: active === 'on'
     });
+
     res.redirect('/admin/doctors');
   } catch (err) {
     res.status(400).render('admin/doctor-form', {
       title: 'Add Doctor',
       doctor: req.body,
-      error: 'Could not save doctor. Please check the fields.'
+      error: err.message || 'Could not save doctor.'
     });
   }
 });
@@ -109,25 +125,60 @@ router.post('/doctors', async (req, res) => {
 router.get('/doctors/:id/edit', async (req, res) => {
   const doctor = await Doctor.findById(req.params.id);
   if (!doctor) return res.redirect('/admin/doctors');
-  res.render('admin/doctor-form', { title: 'Edit Doctor', doctor, error: null });
+
+  res.render('admin/doctor-form', {
+    title: 'Edit Doctor',
+    doctor,
+    error: null
+  });
 });
 
-router.post('/doctors/:id', async (req, res) => {
+router.post('/doctors/:id', upload.single('photo'), async (req, res) => {
   try {
-    const { name, specialty, photoUrl, bio, active } = req.body;
-    await Doctor.findByIdAndUpdate(req.params.id, {
+    const doctor = await Doctor.findById(req.params.id);
+
+    if (!doctor) {
+      return res.redirect('/admin/doctors');
+    }
+
+    const { name, specialty, bio, active } = req.body;
+
+    if (!name || !specialty) {
+      throw new Error('Name and specialty are required.');
+    }
+
+    const updateData = {
       name,
       specialty,
-      photoUrl: photoUrl || '',
       bio: bio || '',
       active: active === 'on'
-    });
+    };
+
+    if (req.file) {
+      const uploaded = await uploadBuffer(
+        req.file.buffer,
+        'hiks-dental/doctors'
+      );
+
+      updateData.photoUrl = uploaded.secure_url;
+    }
+
+    await Doctor.findByIdAndUpdate(
+      req.params.id,
+      updateData,
+      { runValidators: true }
+    );
+
     res.redirect('/admin/doctors');
   } catch (err) {
     res.status(400).render('admin/doctor-form', {
       title: 'Edit Doctor',
-      doctor: { ...req.body, _id: req.params.id },
-      error: 'Could not update doctor. Please check the fields.'
+      doctor: {
+        ...req.body,
+        _id: req.params.id,
+        photoUrl: ''
+      },
+      error: err.message || 'Could not update doctor.'
     });
   }
 });
