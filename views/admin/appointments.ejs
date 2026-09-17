@@ -113,26 +113,32 @@
           method: 'POST',
           headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
-            'X-Requested-With': 'XMLHttpRequest'
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json'
           },
           body: new URLSearchParams({ status: newStatus }).toString()
         });
 
-        if (!response.ok) throw new Error('Request failed');
+        let data = null;
+        try { data = await response.json(); } catch (_) { /* not JSON */ }
 
-        previous = newStatus;
+        if (!response.ok || !data || !data.success) {
+          throw new Error((data && data.error) || 'Request failed');
+        }
+
+        previous = data.status;
         const row = form.closest('tr');
         const badge = row.querySelector('.appointment-status .badge');
-        badge.textContent = newStatus;
-        badge.className = 'badge badge-' + newStatus;
+        badge.textContent = data.status;
+        badge.className = 'badge badge-' + data.status;
 
-        if (newStatus === 'confirmed') {
+        if (data.status === 'confirmed') {
           showPopup('Appointment Confirmed',
             'Appointment ' + form.dataset.token + ' has been confirmed successfully.');
         } else {
           showPopup('Status Updated',
             'Appointment ' + form.dataset.token + ' is now ' +
-            newStatus.charAt(0).toUpperCase() + newStatus.slice(1) + '.');
+            data.status.charAt(0).toUpperCase() + data.status.slice(1) + '.');
         }
       } catch (err) {
         select.value = previous;

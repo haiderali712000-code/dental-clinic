@@ -375,10 +375,36 @@ router.get('/appointments', async (req, res) => {
 router.post('/appointments/:id/status', async (req, res) => {
   const { status } = req.body;
   const allowed = ['pending', 'confirmed', 'cancelled', 'completed'];
-  if (allowed.includes(status)) {
-    await Appointment.findByIdAndUpdate(req.params.id, { status });
+  const wantsJson =
+    req.xhr ||
+    req.get('X-Requested-With') === 'XMLHttpRequest' ||
+    (req.get('Accept') || '').includes('application/json');
+
+  if (!allowed.includes(status)) {
+    if (wantsJson) return res.status(400).json({ success: false, error: 'Invalid status.' });
+    return res.redirect('back');
   }
-  res.redirect('back');
+
+  try {
+    const appointment = await Appointment.findByIdAndUpdate(
+      req.params.id,
+      { status },              // only status is ever written here — token is never touched
+      { new: true, runValidators: true }
+    );
+
+    if (!appointment) {
+      if (wantsJson) return res.status(404).json({ success: false, error: 'Appointment not found.' });
+      return res.redirect('back');
+    }
+
+    if (wantsJson) {
+      return res.json({ success: true, status: appointment.status, token: appointment.token });
+    }
+    return res.redirect('back');
+  } catch (err) {
+    if (wantsJson) return res.status(500).json({ success: false, error: 'Could not update status.' });
+    return res.redirect('back');
+  }
 });
 
 router.post('/appointments/:id/delete', async (req, res) => {
