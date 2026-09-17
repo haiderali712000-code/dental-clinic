@@ -15,16 +15,16 @@ const { uploadBuffer, destroy: destroyCloudinary } = require('../utils/cloudinar
 // Redirect it to the login page (or dashboard when already authenticated).
 router.get('/', (req, res) => {
   if (req.session && req.session.isAdmin) {
-    return res.redirect('/admin/dashboard');
+    return res.redirect(303, '/admin/dashboard');
   }
-  return res.redirect('/admin/login');
+  return res.redirect(303, '/admin/login');
 });
 
 /* ---------------- LOGIN / LOGOUT ---------------- */
 
 router.get('/login', (req, res) => {
   if (req.session && req.session.isAdmin) {
-    return res.redirect('/admin/dashboard');
+    return res.redirect(303, '/admin/dashboard');
   }
   res.render('admin/login', { title: 'Admin Login', error: null });
 });
@@ -33,14 +33,14 @@ router.post('/login', (req, res) => {
   const { password } = req.body;
   if (password && password === process.env.ADMIN_PASSWORD) {
     req.session.isAdmin = true;
-    return res.redirect('/admin/dashboard');
+    return res.redirect(303, '/admin/dashboard');
   }
   res.status(401).render('admin/login', { title: 'Admin Login', error: 'Incorrect password.' });
 });
 
 router.post('/logout', (req, res) => {
   req.session.destroy(() => {
-    res.redirect('/admin/login');
+    res.redirect(303, '/admin/login');
   });
 });
 
@@ -70,6 +70,10 @@ router.get('/dashboard', async (req, res) => {
     totalAppointments
   });
 });
+
+// Safety net: if a POST ever lands on /dashboard (e.g. a 307 redirect
+// preserving method), send it back to the dashboard as a GET instead of 404ing.
+router.post('/dashboard', (req, res) => res.redirect(303, '/admin/dashboard'));
 
 /* ---------------- DOCTORS ---------------- */
 
