@@ -6,14 +6,10 @@ const methodOverride = require('method-override');
 const path = require('path');
 
 const connectDB = require('./config/db');
-const getServices = require('./utils/getServices');
 const publicRoutes = require('./routes/public');
 const adminRoutes = require('./routes/admin');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
-
-connectDB();
 
 // View engine
 app.set('view engine', 'ejs');
@@ -64,15 +60,16 @@ app.use((req, res) => {
   res.status(404).render('404', { title: 'Page Not Found' });
 });
 
-async function startServer() {
-  await connectDB();
-  await getServices();
-  app.listen(PORT, () => {
-    console.log(`HIKS Dental Studio server running on http://localhost:${PORT}`);
-  });
-}
 
-startServer().catch(err => {
-  console.error('Server startup error:', err.message);
-  process.exit(1);
-});
+module.exports = app;
+
+// Local development only. Vercel uses api/index.js and does not call app.listen().
+if (require.main === module) {
+  const PORT = process.env.PORT || 3000;
+  connectDB()
+    .then(() => app.listen(PORT, () => console.log(`HIKS Dental Studio server running on http://localhost:${PORT}`)))
+    .catch(err => {
+      console.error('Server startup error:', err.message);
+      process.exit(1);
+    });
+}

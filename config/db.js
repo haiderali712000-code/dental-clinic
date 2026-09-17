@@ -1,14 +1,27 @@
 const mongoose = require('mongoose');
 
+let connectionPromise = null;
+
 async function connectDB() {
-  const uri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/hiks_dental';
-  try {
-    await mongoose.connect(uri);
-    console.log('MongoDB connected:', uri);
-  } catch (err) {
-    console.error('MongoDB connection error:', err.message);
-    process.exit(1);
+  const uri = process.env.MONGODB_URI;
+  if (!uri) {
+    throw new Error('MONGODB_URI is not configured. Add your MongoDB Atlas connection string in Vercel Environment Variables.');
   }
+
+  if (mongoose.connection.readyState === 1) return mongoose.connection;
+
+  if (!connectionPromise) {
+    connectionPromise = mongoose.connect(uri, {
+      serverSelectionTimeoutMS: 10000
+    }).catch((err) => {
+      connectionPromise = null;
+      throw err;
+    });
+  }
+
+  await connectionPromise;
+  console.log('MongoDB connected');
+  return mongoose.connection;
 }
 
 module.exports = connectDB;

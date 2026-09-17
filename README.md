@@ -61,3 +61,22 @@ The application code and route validation were syntax-checked in this build envi
 - Admin panel: **Treatment Results**
 - Upload real treatment result photos and select Scaling, Whitening, RCT, Crowns, Implants, Cosmetic Dentistry, or Other.
 - Photos are stored in Cloudinary. Add your Cloudinary credentials to `.env` before uploading.
+
+## Vercel deployment
+
+This project is configured for Vercel through `api/index.js` and `vercel.json`.
+
+Add these Environment Variables in Vercel (Production, Preview, and Development as needed):
+
+```env
+MONGODB_URI=your_mongodb_atlas_connection_string
+ADMIN_PASSWORD=your_admin_password
+SESSION_SECRET=your_long_random_session_secret
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_api_key
+CLOUDINARY_API_SECRET=your_api_secret
+```
+
+If your Cloudinary setup already uses `CLOUDINARY_URL`, you can use that instead of the three Cloudinary variables.
+
+Do not use `mongodb://127.0.0.1:27017/...` on Vercel; Vercel cannot connect to a MongoDB server running on your own PC. Use MongoDB Atlas (or another publicly reachable MongoDB provider).
