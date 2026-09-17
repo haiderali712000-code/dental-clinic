@@ -5,6 +5,7 @@ const Doctor = require('../models/Doctor');
 const Appointment = require('../models/Appointment');
 const Gallery = require('../models/Gallery');
 const Service = require('../models/Service');
+const Review = require('../models/Review');
 const upload = require('../utils/upload');
 const { uploadBuffer, destroy: destroyCloudinary } = require('../utils/cloudinary');
 
@@ -255,6 +256,50 @@ router.post('/services/:id', async (req, res) => {
 router.post('/services/:id/delete', async (req, res) => {
   await Service.findByIdAndDelete(req.params.id);
   res.redirect('/admin/services');
+});
+
+/* ---------------- CUSTOMER REVIEWS ---------------- */
+
+router.get('/reviews', async (req, res) => {
+  const reviews = await Review.find({}).sort({ createdAt: -1 });
+  res.render('admin/reviews', { title: 'Customer Reviews', reviews, error: null });
+});
+
+router.post('/reviews', async (req, res) => {
+  try {
+    const customerName = (req.body.customerName || '').trim();
+    const rating = Number(req.body.rating);
+    const reviewText = (req.body.reviewText || '').trim();
+    if (!customerName) throw new Error('Please enter the customer name.');
+    if (!Number.isFinite(rating) || rating < 1 || rating > 5) throw new Error('Please select a valid rating.');
+    if (!reviewText) throw new Error('Please enter the review text.');
+    await Review.create({ customerName, rating, reviewText });
+    res.redirect('/admin/reviews');
+  } catch (err) {
+    const reviews = await Review.find({}).sort({ createdAt: -1 });
+    res.status(400).render('admin/reviews', { title: 'Customer Reviews', reviews, error: err.message || 'Could not add review.' });
+  }
+});
+
+router.post('/reviews/:id', async (req, res) => {
+  try {
+    const customerName = (req.body.customerName || '').trim();
+    const rating = Number(req.body.rating);
+    const reviewText = (req.body.reviewText || '').trim();
+    if (!customerName) throw new Error('Please enter the customer name.');
+    if (!Number.isFinite(rating) || rating < 1 || rating > 5) throw new Error('Please select a valid rating.');
+    if (!reviewText) throw new Error('Please enter the review text.');
+    await Review.findByIdAndUpdate(req.params.id, { customerName, rating, reviewText }, { runValidators: true });
+    res.redirect('/admin/reviews');
+  } catch (err) {
+    const reviews = await Review.find({}).sort({ createdAt: -1 });
+    res.status(400).render('admin/reviews', { title: 'Customer Reviews', reviews, error: err.message || 'Could not update review.' });
+  }
+});
+
+router.post('/reviews/:id/delete', async (req, res) => {
+  await Review.findByIdAndDelete(req.params.id);
+  res.redirect('/admin/reviews');
 });
 
 /* ---------------- APPOINTMENTS ---------------- */

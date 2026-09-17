@@ -5,6 +5,7 @@ const Appointment = require('../models/Appointment');
 const generateToken = require('../utils/generateToken');
 const getServices = require('../utils/getServices');
 const Gallery = require('../models/Gallery');
+const Review = require('../models/Review');
 
 const getCanonical = (req) => `${req.protocol}://${req.get('host')}${req.path === '/' ? '/' : req.path}`;
 
@@ -15,7 +16,8 @@ router.get('/', async (req, res) => {
     Gallery.find({ category: 'Clinic', active: true }).sort({ createdAt: -1 })
   ]);
   const services = await getServices();
-  res.render('index', { title: 'Home', doctors, services, treatmentResults, clinicGallery, canonicalUrl: getCanonical(req) });
+  const reviews = await Review.find({}).sort({ createdAt: -1 });
+  res.render('index', { title: 'Home', doctors, services, treatmentResults, clinicGallery, reviews, canonicalUrl: getCanonical(req) });
 });
 
 router.get('/doctors', async (req, res) => {

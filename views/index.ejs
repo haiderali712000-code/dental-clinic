@@ -192,8 +192,25 @@
 
 <section class="section testimonials-reference" id="testimonials">
   <div class="container">
-    <div class="section-heading reference-heading"><div><span class="section-kicker">PATIENT TESTIMONIALS</span><h2>What Our Patients Say</h2></div></div>
-    <div class="testimonial-card"><div class="quote-mark">“</div><div><p>Patient reviews can be displayed here once verified reviews are provided by the clinic.</p><span class="review-note">Only genuine patient feedback should be published.</span></div></div>
+    <div class="section-heading reference-heading"><div><span class="section-kicker">PATIENT TESTIMONIALS</span><h2>What Our Customers Say</h2></div></div>
+    <% if (reviews && reviews.length) { %>
+      <div class="testimonial-grid">
+        <% reviews.forEach(function(review) { %>
+          <div class="testimonial-card">
+            <div class="quote-mark">“</div>
+            <div>
+              <div class="review-stars" aria-label="<%= review.rating %> out of 5 stars">
+                <% for (let i = 1; i <= 5; i++) { %><span class="<%= i <= review.rating ? 'star-filled' : 'star-empty' %>">★</span><% } %>
+              </div>
+              <p><%= review.reviewText %></p>
+              <span class="review-note review-author">— <%= review.customerName %></span>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+    <% } else { %>
+      <div class="testimonial-card"><div class="quote-mark">“</div><div><p>Patient reviews can be displayed here once verified reviews are provided by the clinic.</p><span class="review-note">Only genuine patient feedback should be published.</span></div></div>
+    <% } %>
   </div>
 </section>
 
@@ -238,7 +255,5 @@
     <div class="map-card"><iframe title="H.I.K.S Dental Studio map" src="https://www.google.com/maps?q=H.I.K.S%20Dental%20Studio%20Canal%20Road%20Mandi%20Bahauddin%20Near%20Muzamil%20Masjid%20Near%20Old%20Ghegha%20Mill&output=embed" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe><a class="btn btn-primary full-width" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=H.I.K.S+Dental+Studio+Canal+Road+Mandi+Bahauddin+Near+Muzamil+Masjid+Near+Old+Ghegha+Mill">Find Us on Google Maps →</a></div>
   </div>
 </section>
-
-<div class="floating-actions" aria-label="Quick contact actions"><a href="https://wa.me/923370401215?text=Hello%20H.I.K.S%20Dental%20Studio%2C%20I%20would%20like%20to%20book%20an%20appointment." target="_blank" rel="noopener" class="floating-whatsapp">WhatsApp</a><a href="tel:03370401215" class="floating-call">Call Now</a></div>
 
 <%- include('partials/footer') %>
