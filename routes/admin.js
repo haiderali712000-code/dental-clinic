@@ -8,6 +8,17 @@ const Service = require('../models/Service');
 const upload = require('../utils/upload');
 const { uploadBuffer, destroy: destroyCloudinary } = require('../utils/cloudinary');
 
+/* ---------------- ADMIN HOME ---------------- */
+
+// Vercel and browsers commonly open /admin directly.
+// Redirect it to the login page (or dashboard when already authenticated).
+router.get('/', (req, res) => {
+  if (req.session && req.session.isAdmin) {
+    return res.redirect('/admin/dashboard');
+  }
+  return res.redirect('/admin/login');
+});
+
 /* ---------------- LOGIN / LOGOUT ---------------- */
 
 router.get('/login', (req, res) => {
