@@ -18,17 +18,10 @@
 <% } else { %>
   <table class="admin-table">
     <thead>
-      
       <tr>
-        <th>Token</th>
-        <th>Patient</th>
-        <th>Phone</th>
-        <th>Service</th>
-        <th>Total Price</th>
-        <th>Doctor</th>
-        <th>Preferred Date</th>
-        <th>Status</th>
-        <th>Actions</th>
+        <th>Token</th><th>Patient</th><th>Phone</th><th>Service</th>
+        <th>Total Price</th><th>Doctor</th><th>Preferred Date</th>
+        <th>Status</th><th>Actions</th>
       </tr>
     </thead>
     <tbody>
@@ -41,17 +34,25 @@
           <td>Rs. <%= Number(a.servicePrice || 0).toLocaleString('en-PK') %></td>
           <td><%= a.doctor ? a.doctor.name : '—' %></td>
           <td><%= a.preferredDate.toDateString() %></td>
-          <td><span class="badge badge-<%= a.status %>"><%= a.status %></span></td>
+          <td class="appointment-status">
+            <span class="badge badge-<%= a.status %>"><%= a.status %></span>
+          </td>
           <td class="actions">
-            <form action="/admin/appointments/<%= a._id %>/status" method="POST" class="inline-form">
-              <select name="status" onchange="this.form.submit()">
+            <form action="/admin/appointments/<%= a._id %>/status"
+                  method="POST"
+                  class="inline-form appointment-status-form"
+                  data-token="<%= a.token %>">
+              <select name="status" class="appointment-status-select">
                 <option value="pending" <%= a.status === 'pending' ? 'selected' : '' %>>Pending</option>
                 <option value="confirmed" <%= a.status === 'confirmed' ? 'selected' : '' %>>Confirmed</option>
                 <option value="completed" <%= a.status === 'completed' ? 'selected' : '' %>>Completed</option>
                 <option value="cancelled" <%= a.status === 'cancelled' ? 'selected' : '' %>>Cancelled</option>
               </select>
             </form>
-            <form action="/admin/appointments/<%= a._id %>/delete" method="POST" onsubmit="return confirm('Delete this appointment?');">
+
+            <form action="/admin/appointments/<%= a._id %>/delete"
+                  method="POST"
+                  onsubmit="return confirm('Delete this appointment?');">
               <button type="submit" class="btn btn-sm btn-danger">Delete</button>
             </form>
           </td>
@@ -60,5 +61,89 @@
     </tbody>
   </table>
 <% } %>
+
+<div id="appointmentPopup" class="appointment-popup" aria-hidden="true">
+  <div class="appointment-popup-box">
+    <div class="appointment-popup-icon">✓</div>
+    <h3 id="appointmentPopupTitle">Appointment Confirmed</h3>
+    <p id="appointmentPopupMessage"></p>
+    <button type="button" id="appointmentPopupClose" class="btn btn-sm">OK</button>
+  </div>
+</div>
+
+<style>
+.appointment-popup{display:none;position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.45);align-items:center;justify-content:center;padding:20px}
+.appointment-popup.show{display:flex}
+.appointment-popup-box{width:min(420px,100%);background:#fff;border-radius:14px;padding:28px 24px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.appointment-popup-icon{width:54px;height:54px;margin:0 auto 14px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:700;background:#e8f7ee;color:#18864b}
+.appointment-popup-box h3{margin:0 0 8px}.appointment-popup-box p{margin:0 0 20px}
+</style>
+
+<script>
+(function () {
+  const forms = document.querySelectorAll('.appointment-status-form');
+  const popup = document.getElementById('appointmentPopup');
+  const title = document.getElementById('appointmentPopupTitle');
+  const message = document.getElementById('appointmentPopupMessage');
+  const close = document.getElementById('appointmentPopupClose');
+
+  function showPopup(t, m) {
+    title.textContent = t;
+    message.textContent = m;
+    popup.classList.add('show');
+    popup.setAttribute('aria-hidden', 'false');
+  }
+  function hidePopup() {
+    popup.classList.remove('show');
+    popup.setAttribute('aria-hidden', 'true');
+  }
+
+  close.addEventListener('click', hidePopup);
+  popup.addEventListener('click', e => { if (e.target === popup) hidePopup(); });
+
+  forms.forEach(form => {
+    const select = form.querySelector('.appointment-status-select');
+    let previous = select.value;
+
+    select.addEventListener('change', async () => {
+      const newStatus = select.value;
+      try {
+        select.disabled = true;
+        const response = await fetch(form.action, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-Requested-With': 'XMLHttpRequest'
+          },
+          body: new URLSearchParams({ status: newStatus }).toString()
+        });
+
+        if (!response.ok) throw new Error('Request failed');
+
+        previous = newStatus;
+        const row = form.closest('tr');
+        const badge = row.querySelector('.appointment-status .badge');
+        badge.textContent = newStatus;
+        badge.className = 'badge badge-' + newStatus;
+
+        if (newStatus === 'confirmed') {
+          showPopup('Appointment Confirmed',
+            'Appointment ' + form.dataset.token + ' has been confirmed successfully.');
+        } else {
+          showPopup('Status Updated',
+            'Appointment ' + form.dataset.token + ' is now ' +
+            newStatus.charAt(0).toUpperCase() + newStatus.slice(1) + '.');
+        }
+      } catch (err) {
+        select.value = previous;
+        showPopup('Update Failed',
+          'The appointment status could not be updated. Please try again.');
+      } finally {
+        select.disabled = false;
+      }
+    });
+  });
+})();
+</script>
 
 <%- include('../partials/admin-footer') %>
