@@ -2,7 +2,10 @@ require('dotenv').config();
 
 const express = require('express');
 const session = require('express-session');
-const MongoStore = require('connect-mongo');
+// connect-mongo v4 exports the MongoStore class as module.exports directly;
+// v5 switched CommonJS to a named export ({ MongoStore }). This works with either.
+const connectMongoModule = require('connect-mongo');
+const MongoStore = connectMongoModule.MongoStore || connectMongoModule.default || connectMongoModule;
 const methodOverride = require('method-override');
 const path = require('path');
 
