@@ -1,7 +1,7 @@
 <%- include('partials/header') %>
 <section class="page-hero"><div class="container"><span class="section-kicker">Patient Portal</span><h1>Check Appointment Status</h1><p>Enter the token number you received after submitting your appointment.</p></div></section>
 <section class="container section narrow">
-  <form action="/status" method="POST" class="form-card inline-form"><label>Token Number<input type="text" name="token" placeholder="HIKS-01" required value="<%= token %>" /></label><button type="submit" class="btn btn-primary">Check Status</button></form>
+  <form action="/status" method="POST" class="form-card inline-form"><label>Token Number<input type="text" name="token" placeholder="DEN-20260916-001" required value="<%= token %>" /></label><button type="submit" class="btn btn-primary">Check Status</button></form>
   <% if (notFound) { %><div class="alert alert-error">No appointment found for that token. Please check and try again.</div><% } %>
   <% if (appointment) { %>
     <div class="status-card"><span class="section-kicker">Appointment Found</span><h2><%= appointment.patientName %></h2><table class="summary-table"><tr><th>Token</th><td><%= appointment.token %></td></tr><tr><th>Service</th><td><%= appointment.service %></td></tr><tr><th>Total Price</th><td>Rs. <%= Number(appointment.servicePrice || 0).toLocaleString('en-PK') %></td></tr><tr><th>Doctor</th><td><%= appointment.doctor ? appointment.doctor.name : 'No preference' %></td></tr><tr><th>Preferred Date</th><td><%= appointment.preferredDate.toDateString() %></td></tr><tr><th>Status</th><td><span class="badge badge-<%= appointment.status %>"><%= appointment.status %></span></td></tr></table></div>

@@ -12,7 +12,7 @@
   <% if (error) { %><div class="alert alert-error"><%= error %></div><% } %>
   <form action="/book" method="POST" class="form-card">
     <label>Full Name *<input type="text" name="patientName" required value="<%= typeof patientName !== 'undefined' ? patientName : '' %>" /></label>
-    <label>Phone Number *<input type="tel" name="phone" required placeholder="03XXXXXXXXX" /></label>
+    <label>Phone Number *<input type="tel" name="phone" required placeholder="03XXXXXXXXX" pattern="03[0-9]{9}" maxlength="11" inputmode="numeric" title="Must start with 03 and be exactly 11 digits, e.g. 03001234567" /></label>
     <label>Service *<select name="service" id="serviceSelect" required><option value="" disabled selected>Select a service</option><% services.forEach(function(s) { %><option value="<%= s.name %>" data-price="<%= s.price %>"><%= s.name %> — Rs. <%= Number(s.price || 0).toLocaleString('en-PK') %></option><% }) %></select></label>
     <div class="booking-total"><span>Total Price</span><strong id="totalPrice">Rs. 0</strong></div>
     <label>Preferred Date *<input type="date" name="preferredDate" required /></label>
@@ -29,6 +29,10 @@
       totalPrice.textContent = 'Rs. ' + price.toLocaleString('en-PK');
     }
     serviceSelect.addEventListener('change', updateTotalPrice);
+    const phoneInput = document.querySelector('input[name="phone"]');
+    phoneInput.addEventListener('input', () => {
+      phoneInput.value = phoneInput.value.replace(/\D/g, '').slice(0, 11);
+    });
   </script>
   <div class="whatsapp-booking">
     <div><strong>Prefer WhatsApp?</strong><span>Send an appointment request directly to the clinic.</span></div>

@@ -4,6 +4,7 @@ const Doctor = require('../models/Doctor');
 const Appointment = require('../models/Appointment');
 const generateToken = require('../utils/generateToken');
 const getServices = require('../utils/getServices');
+const { sendNewAppointmentEmail } = require('../utils/mailer');
 const Gallery = require('../models/Gallery');
 const Review = require('../models/Review');
 
@@ -51,12 +52,23 @@ router.post('/book', async (req, res) => {
     const appointmentDate = new Date(preferredDate);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
+    const phoneDigits = (phone || '').trim();
+    const validPhone = /^03\d{9}$/.test(phoneDigits); // must start with 03, exactly 11 digits total
+
     if (!patientName || !phone || !service || !preferredDate || !validService || Number.isNaN(appointmentDate.getTime()) || appointmentDate < today) {
       const doctors = await Doctor.find({ active: true }).sort({ name: 1 });
       return res.status(400).render('book', { title: 'Book Appointment', doctors, services, error: 'Please fill in all required fields and select a valid service.', canonicalUrl: getCanonical(req) });
     }
+
+    if (!validPhone) {
+      const doctors = await Doctor.find({ active: true }).sort({ name: 1 });
+      return res.status(400).render('book', { title: 'Book Appointment', doctors, services, error: 'Wrong number. Phone number must start with 03 and be exactly 11 digits (e.g. 03001234567).', canonicalUrl: getCanonical(req) });
+    }
+
     const token = await generateToken();
-    const appointment = await Appointment.create({ token, patientName: patientName.trim(), phone: phone.trim(), service: selectedService.name, servicePrice: selectedService.price, preferredDate: appointmentDate, doctor: doctor || null, status: 'pending' });
+    const appointment = await Appointment.create({ token, patientName: patientName.trim(), phone: phoneDigits, service: selectedService.name, servicePrice: selectedService.price, preferredDate: appointmentDate, doctor: doctor || null, status: 'pending' });
+    await appointment.populate('doctor');
+    await sendNewAppointmentEmail(appointment);
     res.render('booked', { title: 'Appointment Booked', appointment, canonicalUrl: getCanonical(req) });
   } catch (err) {
     console.error(err);
