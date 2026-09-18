@@ -14,6 +14,7 @@
   <form action="/admin/services" method="POST" class="service-add-form">
     <label>Service Name<input type="text" name="name" required placeholder="e.g. Dental Filling"></label>
     <label>Price (Rs.)<input type="number" name="price" min="0" step="1" required placeholder="5000"></label>
+    <label>Video URL (optional)<input type="url" name="videoUrl" placeholder="https://youtube.com/... or tiktok.com/..."></label>
     <button type="submit" class="btn btn-primary">Add Service</button>
   </form>
 </div>
@@ -28,6 +29,7 @@
         <form action="/admin/services/<%= service._id %>" method="POST" style="display:contents;">
           <input type="text" name="name" value="<%= service.name %>" required aria-label="Service name">
           <input type="number" name="price" value="<%= service.price %>" min="0" step="1" required aria-label="Service price">
+          <input type="url" name="videoUrl" value="<%= service.videoUrl || '' %>" placeholder="Video URL (optional)" aria-label="Service video URL">
           <button type="submit" class="btn btn-primary">Save</button>
         </form>
         <form action="/admin/services/<%= service._id %>/delete" method="POST" onsubmit="return confirm('Delete this service? Existing appointments will keep their saved service and price.');">

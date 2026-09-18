@@ -274,6 +274,7 @@ router.post('/services', async (req, res) => {
   try {
     const name = (req.body.name || '').trim();
     const price = Number(req.body.price);
+    const videoUrl = (req.body.videoUrl || '').trim();
     if (!name) throw new Error('Please enter a service name.');
     if (!Number.isFinite(price) || price < 0) throw new Error('Please enter a valid price.');
     const existingLegacy = await Service.findOne({ name, isAdminAdded: { $ne: true } });
@@ -281,9 +282,10 @@ router.post('/services', async (req, res) => {
       existingLegacy.price = price;
       existingLegacy.active = true;
       existingLegacy.isAdminAdded = true;
+      existingLegacy.videoUrl = videoUrl;
       await existingLegacy.save();
     } else {
-      await Service.create({ name, price, active: true, isAdminAdded: true });
+      await Service.create({ name, price, active: true, isAdminAdded: true, videoUrl });
     }
     res.redirect('/admin/services');
   } catch (err) {
@@ -297,9 +299,10 @@ router.post('/services/:id', async (req, res) => {
   try {
     const name = (req.body.name || '').trim();
     const price = Number(req.body.price);
+    const videoUrl = (req.body.videoUrl || '').trim();
     if (!name) throw new Error('Please enter a service name.');
     if (!Number.isFinite(price) || price < 0) throw new Error('Please enter a valid price.');
-    await Service.findByIdAndUpdate(req.params.id, { name, price }, { runValidators: true });
+    await Service.findByIdAndUpdate(req.params.id, { name, price, videoUrl }, { runValidators: true });
     res.redirect('/admin/services');
   } catch (err) {
     const services = await Service.find({ isAdminAdded: true }).sort({ createdAt: 1 });

@@ -13,7 +13,8 @@ async function getServices() {
     price: s.price,
     active: s.active,
     icon: meta.get(s.name)?.icon || '🦷',
-    description: meta.get(s.name)?.description || ''
+    description: meta.get(s.name)?.description || '',
+    videoUrl: s.videoUrl || ''
   }));
 }
 
