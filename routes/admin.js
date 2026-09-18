@@ -186,8 +186,19 @@ router.post('/doctors/:id', upload.single('photo'), async (req, res) => {
 });
 
 router.post('/doctors/:id/delete', async (req, res) => {
-  await Doctor.findByIdAndDelete(req.params.id);
-  res.redirect('/admin/doctors');
+  const wantsJson =
+    req.xhr ||
+    req.get('X-Requested-With') === 'XMLHttpRequest' ||
+    (req.get('Accept') || '').includes('application/json');
+
+  try {
+    await Doctor.findByIdAndDelete(req.params.id);
+    if (wantsJson) return res.json({ success: true });
+    res.redirect('/admin/doctors');
+  } catch (err) {
+    if (wantsJson) return res.status(500).json({ success: false, error: 'Could not delete doctor.' });
+    res.redirect('/admin/doctors');
+  }
 });
 
 /* ---------------- CEO MESSAGE ---------------- */

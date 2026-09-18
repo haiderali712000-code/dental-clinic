@@ -49,9 +49,22 @@
   </label>
 
   <div class="form-actions">
-    <button type="submit" class="btn btn-primary">Save Doctor</button>
+    <button type="submit" class="btn btn-primary" id="doctorSubmitBtn">Save Doctor</button>
     <a href="/admin/doctors" class="btn btn-outline">Cancel</a>
   </div>
 </form>
+
+<script>
+  document.querySelector('.form-card').addEventListener('submit', function () {
+    var btn = document.getElementById('doctorSubmitBtn');
+    if (btn.dataset.submitted) {
+      // Already submitted once — block any further duplicate submits.
+      return false;
+    }
+    btn.dataset.submitted = 'true';
+    btn.disabled = true;
+    btn.textContent = 'Saving...';
+  });
+</script>
 
 <%- include('../partials/admin-footer') %>

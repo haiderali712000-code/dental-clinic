@@ -20,7 +20,7 @@
     </thead>
     <tbody>
       <% doctors.forEach(function(doc) { %>
-        <tr>
+        <tr data-doctor-row="<%= doc._id %>">
           <td><img class="thumb" src="<%= doc.photoUrl || 'https://placehold.co/60x60?text=Dr' %>" alt="" /></td>
           <td><%= doc.name %></td>
           <td><%= doc.specialty %></td>
@@ -33,7 +33,7 @@
           </td>
           <td class="actions">
             <a href="/admin/doctors/<%= doc._id %>/edit" class="btn btn-sm btn-outline">Edit</a>
-            <form action="/admin/doctors/<%= doc._id %>/delete" method="POST" onsubmit="return confirm('Delete this doctor?');">
+            <form action="/admin/doctors/<%= doc._id %>/delete" method="POST" class="doctor-delete-form">
               <button type="submit" class="btn btn-sm btn-danger">Delete</button>
             </form>
           </td>
@@ -42,5 +42,38 @@
     </tbody>
   </table>
 <% } %>
+
+<script>
+  document.querySelectorAll('.doctor-delete-form').forEach(function (form) {
+    form.addEventListener('submit', async function (e) {
+      e.preventDefault();
+      if (!confirm('Delete this doctor?')) return;
+
+      const btn = form.querySelector('button');
+      btn.disabled = true;
+      btn.textContent = 'Deleting...';
+
+      try {
+        const response = await fetch(form.action, {
+          method: 'POST',
+          headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+        });
+        let data = null;
+        try { data = await response.json(); } catch (_) { /* not JSON */ }
+
+        if (!response.ok || !data || !data.success) {
+          throw new Error((data && data.error) || 'Request failed');
+        }
+
+        const row = form.closest('tr');
+        row.remove();
+      } catch (err) {
+        alert('Could not delete this doctor. Please try again.');
+        btn.disabled = false;
+        btn.textContent = 'Delete';
+      }
+    });
+  });
+</script>
 
 <%- include('../partials/admin-footer') %>
