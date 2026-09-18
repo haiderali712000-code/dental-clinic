@@ -2,6 +2,7 @@ require('dotenv').config();
 
 const express = require('express');
 const session = require('express-session');
+const MongoStore = require('connect-mongo');
 const methodOverride = require('method-override');
 const path = require('path');
 
@@ -26,6 +27,16 @@ app.use(
     secret: process.env.SESSION_SECRET || 'dev-secret-change-me',
     resave: false,
     saveUninitialized: false,
+    // MemoryStore (the express-session default) lives in the Node process's RAM,
+    // which Vercel wipes whenever it spins down an idle serverless function —
+    // that's what was logging admins out after periods of inactivity even though
+    // the cookie itself was still valid. Storing sessions in MongoDB instead
+    // means they survive cold starts.
+    store: MongoStore.create({
+      mongoUrl: process.env.MONGODB_URI,
+      collectionName: 'sessions',
+      ttl: 60 * 60 * 8 // 8 hours, matching the cookie below
+    }),
     cookie: {
       maxAge: 1000 * 60 * 60 * 8 // 8 hours
     }
