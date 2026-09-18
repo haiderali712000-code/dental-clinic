@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const requireAdmin = require('../middleware/auth');
 const Doctor = require('../models/Doctor');
+const CeoInfo = require('../models/CeoInfo');
 const Appointment = require('../models/Appointment');
 const Gallery = require('../models/Gallery');
 const Service = require('../models/Service');
@@ -186,6 +187,42 @@ router.post('/doctors/:id', upload.single('photo'), async (req, res) => {
 router.post('/doctors/:id/delete', async (req, res) => {
   await Doctor.findByIdAndDelete(req.params.id);
   res.redirect('/admin/doctors');
+});
+
+/* ---------------- CEO MESSAGE ---------------- */
+
+router.get('/ceo', async (req, res) => {
+  const ceo = await CeoInfo.findOne({});
+  res.render('admin/ceo', { title: 'CEO Message', ceo, error: null });
+});
+
+router.post('/ceo', upload.single('photo'), async (req, res) => {
+  try {
+    const { name, title, message } = req.body;
+    const updateData = {
+      name: name || '',
+      title: title || 'Chief Executive Officer',
+      message: message || '',
+      active: true
+    };
+
+    if (req.file) {
+      const uploaded = await uploadBuffer(req.file.buffer, 'hiks-dental/ceo');
+      updateData.photoUrl = uploaded.secure_url;
+    }
+
+    const existing = await CeoInfo.findOne({});
+    if (existing) {
+      await CeoInfo.findByIdAndUpdate(existing._id, updateData, { runValidators: true });
+    } else {
+      await CeoInfo.create(updateData);
+    }
+
+    res.redirect('/admin/ceo');
+  } catch (err) {
+    const ceo = await CeoInfo.findOne({});
+    res.status(400).render('admin/ceo', { title: 'CEO Message', ceo, error: err.message || 'Could not save CEO message.' });
+  }
 });
 
 /* ---------------- TREATMENT RESULTS GALLERY ---------------- */

@@ -137,6 +137,21 @@
         <a href="/doctors" class="btn btn-primary">View All Doctors →</a>
       </div>
     <% } %>
+    <% if (ceo && (ceo.photoUrl || ceo.message)) { %>
+      <article class="ceo-feature-card">
+        <% if (ceo.photoUrl) { %>
+          <div class="ceo-feature-photo-wrap">
+            <img src="<%= ceo.photoUrl %>" alt="<%= ceo.name || 'CEO' %>" class="ceo-feature-photo" />
+          </div>
+        <% } %>
+        <div class="ceo-feature-content">
+          <span class="profile-label">A MESSAGE FROM OUR CEO</span>
+          <% if (ceo.name) { %><h3><%= ceo.name %></h3><% } %>
+          <% if (ceo.title) { %><p class="doctor-qualification"><%= ceo.title %></p><% } %>
+          <% if (ceo.message) { %><p><%= ceo.message %></p><% } %>
+        </div>
+      </article>
+    <% } %>
   </div>
 </section>
 
