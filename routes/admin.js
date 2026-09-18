@@ -3,6 +3,7 @@ const router = express.Router();
 const requireAdmin = require('../middleware/auth');
 const Doctor = require('../models/Doctor');
 const CeoInfo = require('../models/CeoInfo');
+const AdminInfo = require('../models/AdminInfo');
 const Appointment = require('../models/Appointment');
 const Gallery = require('../models/Gallery');
 const Service = require('../models/Service');
@@ -222,6 +223,42 @@ router.post('/ceo', upload.single('photo'), async (req, res) => {
   } catch (err) {
     const ceo = await CeoInfo.findOne({});
     res.status(400).render('admin/ceo', { title: 'CEO Message', ceo, error: err.message || 'Could not save CEO message.' });
+  }
+});
+
+/* ---------------- ADMIN MESSAGE ---------------- */
+
+router.get('/admin-message', async (req, res) => {
+  const adminInfo = await AdminInfo.findOne({});
+  res.render('admin/admin-message', { title: 'Admin Message', adminInfo, error: null });
+});
+
+router.post('/admin-message', upload.single('photo'), async (req, res) => {
+  try {
+    const { name, title, message } = req.body;
+    const updateData = {
+      name: name || '',
+      title: title || 'Administrator',
+      message: message || '',
+      active: true
+    };
+
+    if (req.file) {
+      const uploaded = await uploadBuffer(req.file.buffer, 'hiks-dental/admin');
+      updateData.photoUrl = uploaded.secure_url;
+    }
+
+    const existing = await AdminInfo.findOne({});
+    if (existing) {
+      await AdminInfo.findByIdAndUpdate(existing._id, updateData, { runValidators: true });
+    } else {
+      await AdminInfo.create(updateData);
+    }
+
+    res.redirect('/admin/admin-message');
+  } catch (err) {
+    const adminInfo = await AdminInfo.findOne({});
+    res.status(400).render('admin/admin-message', { title: 'Admin Message', adminInfo, error: err.message || 'Could not save admin message.' });
   }
 });
 

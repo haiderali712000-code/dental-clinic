@@ -1,0 +1,52 @@
+<%- include('../partials/admin-header') %>
+
+<h1>Admin Message</h1>
+<p class="muted">This photo and message appear under the CEO message in the "Meet Our Dental Team" section on your homepage.</p>
+
+<% if (error) { %>
+  <div class="alert alert-error"><%= error %></div>
+<% } %>
+
+<form
+  action="/admin/admin-message"
+  method="POST"
+  enctype="multipart/form-data"
+  class="form-card"
+>
+  <label>
+    Admin Name
+    <input type="text" name="name" value="<%= adminInfo ? adminInfo.name : '' %>" placeholder="e.g. Sara Khan" />
+  </label>
+
+  <label>
+    Title
+    <input type="text" name="title" value="<%= adminInfo && adminInfo.title ? adminInfo.title : 'Administrator' %>" placeholder="Administrator" />
+  </label>
+
+  <label>
+    Admin Photo
+    <input type="file" name="photo" accept="image/jpeg,image/png,image/webp,image/gif" />
+  </label>
+
+  <% if (adminInfo && adminInfo.photoUrl) { %>
+    <div style="margin: 10px 0 18px;">
+      <p class="muted">Current Photo:</p>
+      <img
+        src="<%= adminInfo.photoUrl %>"
+        alt="<%= adminInfo.name || 'Admin' %>"
+        style="width:120px;height:120px;object-fit:cover;border-radius:10px;"
+      />
+    </div>
+  <% } %>
+
+  <label>
+    Admin Message
+    <textarea name="message" rows="6" placeholder="A short message from the admin to patients..."><%= adminInfo ? adminInfo.message : '' %></textarea>
+  </label>
+
+  <div class="form-actions">
+    <button type="submit" class="btn btn-primary">Save Admin Message</button>
+  </div>
+</form>
+
+<%- include('../partials/admin-footer') %>

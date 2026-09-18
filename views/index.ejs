@@ -152,6 +152,21 @@
         </div>
       </article>
     <% } %>
+    <% if (adminInfo && (adminInfo.photoUrl || adminInfo.message)) { %>
+      <article class="ceo-feature-card admin-feature-card">
+        <% if (adminInfo.photoUrl) { %>
+          <div class="ceo-feature-photo-wrap">
+            <img src="<%= adminInfo.photoUrl %>" alt="<%= adminInfo.name || 'Admin' %>" class="ceo-feature-photo" />
+          </div>
+        <% } %>
+        <div class="ceo-feature-content">
+          <span class="profile-label">A MESSAGE FROM OUR ADMIN</span>
+          <% if (adminInfo.name) { %><h3><%= adminInfo.name %></h3><% } %>
+          <% if (adminInfo.title) { %><p class="doctor-qualification"><%= adminInfo.title %></p><% } %>
+          <% if (adminInfo.message) { %><p><%= adminInfo.message %></p><% } %>
+        </div>
+      </article>
+    <% } %>
   </div>
 </section>
 
