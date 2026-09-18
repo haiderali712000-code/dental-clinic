@@ -111,32 +111,6 @@
       </div>
       <a href="/doctors" class="text-link">View All Doctors →</a>
     </div>
-    <% if (doctors && doctors.length) { %>
-      <% const firstDoctor = doctors[0]; %>
-      <article class="doctor-feature-card">
-        <div class="doctor-feature-photo-wrap">
-          <img src="<%= firstDoctor.photoUrl || '/images/doctor-haffi-ur-rehman.jpg' %>" alt="<%= firstDoctor.name %>" class="doctor-feature-photo" />
-        </div>
-        <div class="doctor-feature-content">
-          <span class="profile-label">DENTAL SURGEON</span>
-          <h3><%= firstDoctor.name %></h3>
-          <p class="doctor-qualification"><%= firstDoctor.specialty %></p>
-          <p><%= firstDoctor.bio || 'Dedicated to providing professional, patient-focused dental care and healthy, confident smiles.' %></p>
-          <div class="doctor-feature-meta">
-            <span>Professional Care</span>
-            <span>Patient-focused</span>
-            <span>Modern Dental Setup</span>
-          </div>
-          <a href="/doctors" class="btn btn-primary">View All Doctors →</a>
-        </div>
-      </article>
-    <% } else { %>
-      <div class="doctor-empty doctors-empty-large">
-        <h3>Our Dental Doctors</h3>
-        <p>Doctor profiles will appear here once they are added from the admin panel.</p>
-        <a href="/doctors" class="btn btn-primary">View All Doctors →</a>
-      </div>
-    <% } %>
     <% if (ceo && (ceo.photoUrl || ceo.message)) { %>
       <article class="ceo-feature-card">
         <% if (ceo.photoUrl) { %>
