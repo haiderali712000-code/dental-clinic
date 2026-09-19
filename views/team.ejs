@@ -1,0 +1,38 @@
+<%- include('partials/header') %>
+
+<section class="page-hero-simple">
+  <div class="container">
+    <span class="section-kicker">H.I.K.S DENTAL STUDIO</span>
+    <h1>Our Team</h1>
+    <p>The people behind your care, comfort and confident smile.</p>
+  </div>
+</section>
+
+<section class="section doctors-list-section">
+  <div class="container">
+    <% if (teamMembers && teamMembers.length) { %>
+      <div class="doctors-list-grid">
+        <% teamMembers.forEach(function(member) { %>
+          <article class="doctor-profile-card">
+            <div class="doctor-profile-photo-wrap">
+              <img src="<%= member.photoUrl || 'https://placehold.co/400x400?text=Team' %>" alt="<%= member.name %>" class="doctor-profile-photo" />
+            </div>
+            <div class="doctor-profile-body">
+              <span class="profile-label">TEAM MEMBER</span>
+              <h2><%= member.name %></h2>
+              <p class="doctor-qualification"><%= member.title %></p>
+              <p><%= member.description || '' %></p>
+            </div>
+          </article>
+        <% }) %>
+      </div>
+    <% } else { %>
+      <div class="doctor-empty">
+        <h2>Our Team</h2>
+        <p>No team member profiles are currently available.</p>
+      </div>
+    <% } %>
+  </div>
+</section>
+
+<%- include('partials/footer') %>

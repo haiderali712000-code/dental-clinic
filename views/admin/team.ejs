@@ -1,0 +1,79 @@
+<%- include('../partials/admin-header') %>
+
+<div class="page-header">
+  <h1>Our Team</h1>
+  <a href="/admin/team/new" class="btn btn-primary">+ Add Team Member</a>
+</div>
+
+<% if (teamMembers.length === 0) { %>
+  <p class="muted">No team members added yet.</p>
+<% } else { %>
+  <table class="admin-table">
+    <thead>
+      <tr>
+        <th>Photo</th>
+        <th>Name</th>
+        <th>Title</th>
+        <th>Status</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% teamMembers.forEach(function(member) { %>
+        <tr data-team-row="<%= member._id %>">
+          <td><img class="thumb" src="<%= member.photoUrl || 'https://placehold.co/60x60?text=Team' %>" alt="" /></td>
+          <td><%= member.name %></td>
+          <td><%= member.title %></td>
+          <td>
+            <% if (member.active) { %>
+              <span class="badge badge-confirmed">Active</span>
+            <% } else { %>
+              <span class="badge badge-cancelled">Inactive</span>
+            <% } %>
+          </td>
+          <td class="actions">
+            <a href="/admin/team/<%= member._id %>/edit" class="btn btn-sm btn-outline">Edit</a>
+            <form action="/admin/team/<%= member._id %>/delete" method="POST" class="team-delete-form">
+              <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+            </form>
+          </td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+<% } %>
+
+<script>
+  document.querySelectorAll('.team-delete-form').forEach(function (form) {
+    form.addEventListener('submit', async function (e) {
+      e.preventDefault();
+      if (!confirm('Delete this team member?')) return;
+
+      const btn = form.querySelector('button');
+      btn.disabled = true;
+      btn.textContent = 'Deleting...';
+
+      try {
+        const response = await fetch(form.action, {
+          method: 'POST',
+          headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+        });
+        let data = null;
+        try { data = await response.json(); } catch (_) { /* not JSON */ }
+
+        if (!response.ok || !data || !data.success) {
+          throw new Error((data && data.error) || 'Request failed');
+        }
+
+        const row = form.closest('tr');
+        row.remove();
+      } catch (err) {
+        alert('Could not delete this team member. Please try again.');
+        btn.disabled = false;
+        btn.textContent = 'Delete';
+      }
+    });
+  });
+</script>
+
+<%- include('../partials/admin-footer') %>

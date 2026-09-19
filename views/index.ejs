@@ -126,18 +126,18 @@
         </div>
       </article>
     <% } %>
-    <% if (adminInfo && (adminInfo.photoUrl || adminInfo.message)) { %>
-      <article class="ceo-feature-card admin-feature-card">
-        <% if (adminInfo.photoUrl) { %>
-          <div class="ceo-feature-photo-wrap">
-            <img src="<%= adminInfo.photoUrl %>" alt="<%= adminInfo.name || 'Admin' %>" class="ceo-feature-photo" />
-          </div>
-        <% } %>
-        <div class="ceo-feature-content">
-          <span class="profile-label">A MESSAGE FROM OUR ADMIN</span>
-          <% if (adminInfo.name) { %><h3><%= adminInfo.name %></h3><% } %>
-          <% if (adminInfo.title) { %><p class="doctor-qualification"><%= adminInfo.title %></p><% } %>
-          <% if (adminInfo.message) { %><p><%= adminInfo.message %></p><% } %>
+    <% if (teamMembers && teamMembers.length) { %>
+      <% const firstMember = teamMembers[0]; %>
+      <article class="doctor-feature-card team-feature-card">
+        <div class="doctor-feature-photo-wrap">
+          <img src="<%= firstMember.photoUrl || 'https://placehold.co/400x400?text=Team' %>" alt="<%= firstMember.name %>" class="doctor-feature-photo" />
+        </div>
+        <div class="doctor-feature-content">
+          <span class="profile-label">MEET OUR TEAM</span>
+          <h3><%= firstMember.name %></h3>
+          <p class="doctor-qualification"><%= firstMember.title %></p>
+          <% if (firstMember.description) { %><p><%= firstMember.description %></p><% } %>
+          <a href="/team" class="btn btn-primary">View All Team →</a>
         </div>
       </article>
     <% } %>

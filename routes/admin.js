@@ -3,7 +3,7 @@ const router = express.Router();
 const requireAdmin = require('../middleware/auth');
 const Doctor = require('../models/Doctor');
 const CeoInfo = require('../models/CeoInfo');
-const AdminInfo = require('../models/AdminInfo');
+const TeamMember = require('../models/TeamMember');
 const Appointment = require('../models/Appointment');
 const Gallery = require('../models/Gallery');
 const Service = require('../models/Service');
@@ -237,39 +237,120 @@ router.post('/ceo', upload.single('photo'), async (req, res) => {
   }
 });
 
-/* ---------------- ADMIN MESSAGE ---------------- */
+/* ---------------- OUR TEAM ---------------- */
 
-router.get('/admin-message', async (req, res) => {
-  const adminInfo = await AdminInfo.findOne({});
-  res.render('admin/admin-message', { title: 'Admin Message', adminInfo, error: null });
+router.get('/team', async (req, res) => {
+  const teamMembers = await TeamMember.find({}).sort({ createdAt: -1 });
+  res.render('admin/team', { title: 'Our Team', teamMembers });
 });
 
-router.post('/admin-message', upload.single('photo'), async (req, res) => {
+router.get('/team/new', (req, res) => {
+  res.render('admin/team-form', { title: 'Add Team Member', member: null, error: null });
+});
+
+router.post('/team', upload.single('photo'), async (req, res) => {
   try {
-    const { name, title, message } = req.body;
+    const { name, title, description, active } = req.body;
+
+    if (!name || !title) {
+      throw new Error('Name and title are required.');
+    }
+
+    let photoUrl = '';
+
+    if (req.file) {
+      const uploaded = await uploadBuffer(req.file.buffer, 'hiks-dental/team');
+      photoUrl = uploaded.secure_url;
+    }
+
+    await TeamMember.create({
+      name,
+      title,
+      photoUrl,
+      description: description || '',
+      active: active === 'on'
+    });
+
+    res.redirect('/admin/team');
+  } catch (err) {
+    res.status(400).render('admin/team-form', {
+      title: 'Add Team Member',
+      member: req.body,
+      error: err.message || 'Could not save team member.'
+    });
+  }
+});
+
+router.get('/team/:id/edit', async (req, res) => {
+  const member = await TeamMember.findById(req.params.id);
+  if (!member) return res.redirect('/admin/team');
+
+  res.render('admin/team-form', {
+    title: 'Edit Team Member',
+    member,
+    error: null
+  });
+});
+
+router.post('/team/:id', upload.single('photo'), async (req, res) => {
+  try {
+    const member = await TeamMember.findById(req.params.id);
+
+    if (!member) {
+      return res.redirect('/admin/team');
+    }
+
+    const { name, title, description, active } = req.body;
+
+    if (!name || !title) {
+      throw new Error('Name and title are required.');
+    }
+
     const updateData = {
-      name: name || '',
-      title: title || 'Administrator',
-      message: message || '',
-      active: true
+      name,
+      title,
+      description: description || '',
+      active: active === 'on'
     };
 
     if (req.file) {
-      const uploaded = await uploadBuffer(req.file.buffer, 'hiks-dental/admin');
+      const uploaded = await uploadBuffer(req.file.buffer, 'hiks-dental/team');
       updateData.photoUrl = uploaded.secure_url;
     }
 
-    const existing = await AdminInfo.findOne({});
-    if (existing) {
-      await AdminInfo.findByIdAndUpdate(existing._id, updateData, { runValidators: true });
-    } else {
-      await AdminInfo.create(updateData);
-    }
+    await TeamMember.findByIdAndUpdate(
+      req.params.id,
+      updateData,
+      { runValidators: true }
+    );
 
-    res.redirect('/admin/admin-message');
+    res.redirect('/admin/team');
   } catch (err) {
-    const adminInfo = await AdminInfo.findOne({});
-    res.status(400).render('admin/admin-message', { title: 'Admin Message', adminInfo, error: err.message || 'Could not save admin message.' });
+    res.status(400).render('admin/team-form', {
+      title: 'Edit Team Member',
+      member: {
+        ...req.body,
+        _id: req.params.id,
+        photoUrl: ''
+      },
+      error: err.message || 'Could not update team member.'
+    });
+  }
+});
+
+router.post('/team/:id/delete', async (req, res) => {
+  const wantsJson =
+    req.xhr ||
+    req.get('X-Requested-With') === 'XMLHttpRequest' ||
+    (req.get('Accept') || '').includes('application/json');
+
+  try {
+    await TeamMember.findByIdAndDelete(req.params.id);
+    if (wantsJson) return res.json({ success: true });
+    res.redirect('/admin/team');
+  } catch (err) {
+    if (wantsJson) return res.status(500).json({ success: false, error: 'Could not delete team member.' });
+    res.redirect('/admin/team');
   }
 });
 
