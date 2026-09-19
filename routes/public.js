@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const asyncHandler = require('../utils/asyncHandler');
 const Doctor = require('../models/Doctor');
 const CeoInfo = require('../models/CeoInfo');
 const TeamMember = require('../models/TeamMember');
@@ -12,7 +13,7 @@ const Review = require('../models/Review');
 
 const getCanonical = (req) => `${req.protocol}://${req.get('host')}${req.path === '/' ? '/' : req.path}`;
 
-router.get('/', async (req, res) => {
+router.get('/', asyncHandler(async (req, res) => {
   const doctors = await Doctor.find({ active: true }).sort({ createdAt: 1 });
   const ceo = await CeoInfo.findOne({ active: true });
   const teamMembers = await TeamMember.find({ active: true }).sort({ createdAt: 1 });
@@ -23,17 +24,17 @@ router.get('/', async (req, res) => {
   const services = await getServices();
   const reviews = await Review.find({}).sort({ createdAt: -1 });
   res.render('index', { title: 'Home', doctors, ceo, teamMembers, services, treatmentResults, clinicGallery, reviews, canonicalUrl: getCanonical(req) });
-});
+}));
 
-router.get('/doctors', async (req, res) => {
+router.get('/doctors', asyncHandler(async (req, res) => {
   const doctors = await Doctor.find({ active: true }).sort({ createdAt: 1 });
   res.render('doctors', { title: 'Our Doctors', doctors, canonicalUrl: getCanonical(req) });
-});
+}));
 
-router.get('/team', async (req, res) => {
+router.get('/team', asyncHandler(async (req, res) => {
   const teamMembers = await TeamMember.find({ active: true }).sort({ createdAt: 1 });
   res.render('team', { title: 'Our Team', teamMembers, canonicalUrl: getCanonical(req) });
-});
+}));
 
 router.get('/robots.txt', (req, res) => {
   res.type('text/plain').send(`User-agent: *\nAllow: /\nDisallow: /admin\nSitemap: ${req.protocol}://${req.get('host')}/sitemap.xml\n`);
@@ -46,13 +47,13 @@ router.get('/sitemap.xml', (req, res) => {
 
 router.get('/health', (req, res) => res.json({ ok: true, service: 'hiks-dental-studio' }));
 
-router.get('/book', async (req, res) => {
+router.get('/book', asyncHandler(async (req, res) => {
   const doctors = await Doctor.find({ active: true }).sort({ name: 1 });
   const services = await getServices();
   res.render('book', { title: 'Book Appointment', doctors, services, error: null, canonicalUrl: getCanonical(req) });
-});
+}));
 
-router.post('/book', async (req, res) => {
+router.post('/book', asyncHandler(async (req, res) => {
   try {
     const { patientName, phone, service, preferredDate, doctor } = req.body;
     const services = await getServices();
@@ -85,13 +86,13 @@ router.post('/book', async (req, res) => {
     const services = await getServices();
     res.status(500).render('book', { title: 'Book Appointment', doctors, services, error: 'Something went wrong while booking. Please try again.', canonicalUrl: getCanonical(req) });
   }
-});
+}));
 
 router.get('/status', (req, res) => res.render('status', { title: 'Check Appointment Status', appointment: null, notFound: false, token: '', canonicalUrl: getCanonical(req) }));
-router.post('/status', async (req, res) => {
+router.post('/status', asyncHandler(async (req, res) => {
   const { token } = req.body;
   const appointment = await Appointment.findOne({ token: (token || '').trim().toUpperCase() }).populate('doctor');
   res.render('status', { title: 'Check Appointment Status', appointment, notFound: !appointment, token, canonicalUrl: getCanonical(req) });
-});
+}));
 
 module.exports = router;

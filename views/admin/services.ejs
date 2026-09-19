@@ -11,7 +11,7 @@
 
 <div class="card" style="margin-bottom:20px;">
   <h2 style="margin-top:0;">Add Service</h2>
-  <form action="/admin/services" method="POST" class="service-add-form">
+  <form action="/admin/services" method="POST" class="service-add-form ajax-form" data-success-message="Service added!" data-redirect="/admin/services" data-reset="true">
     <label>Service Name<input type="text" name="name" required placeholder="e.g. Dental Filling"></label>
     <label>Price (Rs.)<input type="number" name="price" min="0" step="1" required placeholder="5000"></label>
     <label>Video URL (optional)<input type="url" name="videoUrl" placeholder="https://youtube.com/... or tiktok.com/..."></label>
@@ -26,7 +26,7 @@
   <div class="service-admin-list">
     <% services.forEach(function(service) { %>
       <div class="service-admin-row">
-        <form action="/admin/services/<%= service._id %>" method="POST" style="display:contents;">
+        <form action="/admin/services/<%= service._id %>" method="POST" style="display:contents;" class="ajax-form" data-success-message="Service updated!" data-redirect="/admin/services">
           <input type="text" name="name" value="<%= service.name %>" required aria-label="Service name">
           <input type="number" name="price" value="<%= service.price %>" min="0" step="1" required aria-label="Service price">
           <input type="url" name="videoUrl" value="<%= service.videoUrl || '' %>" placeholder="Video URL (optional)" aria-label="Service video URL">

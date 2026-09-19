@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const requireAdmin = require('../middleware/auth');
+const asyncHandler = require('../utils/asyncHandler');
 const Doctor = require('../models/Doctor');
 const CeoInfo = require('../models/CeoInfo');
 const TeamMember = require('../models/TeamMember');
@@ -10,6 +11,16 @@ const Service = require('../models/Service');
 const Review = require('../models/Review');
 const upload = require('../utils/upload');
 const { uploadBuffer, destroy: destroyCloudinary } = require('../utils/cloudinary');
+
+// True when the request came from our AJAX admin forms (fetch + FormData),
+// so we can respond with JSON instead of a redirect/re-render.
+function wantsJson(req) {
+  return (
+    req.xhr ||
+    req.get('X-Requested-With') === 'XMLHttpRequest' ||
+    (req.get('Accept') || '').includes('application/json')
+  );
+}
 
 /* ---------------- ADMIN HOME ---------------- */
 
@@ -51,7 +62,7 @@ router.use(requireAdmin);
 
 /* ---------------- DASHBOARD ---------------- */
 
-router.get('/dashboard', async (req, res) => {
+router.get('/dashboard', asyncHandler(async (req, res) => {
   const startOfToday = new Date();
   startOfToday.setHours(0, 0, 0, 0);
   const endOfToday = new Date();
@@ -71,7 +82,7 @@ router.get('/dashboard', async (req, res) => {
     totalDoctors,
     totalAppointments
   });
-});
+}));
 
 // Safety net: if a POST ever lands on /dashboard (e.g. a 307 redirect
 // preserving method), send it back to the dashboard as a GET instead of 404ing.
@@ -79,16 +90,16 @@ router.post('/dashboard', (req, res) => res.redirect(303, '/admin/dashboard'));
 
 /* ---------------- DOCTORS ---------------- */
 
-router.get('/doctors', async (req, res) => {
+router.get('/doctors', asyncHandler(async (req, res) => {
   const doctors = await Doctor.find({}).sort({ createdAt: -1 });
   res.render('admin/doctors', { title: 'Manage Doctors', doctors });
-});
+}));
 
 router.get('/doctors/new', (req, res) => {
   res.render('admin/doctor-form', { title: 'Add Doctor', doctor: null, error: null });
 });
 
-router.post('/doctors', upload.single('photo'), async (req, res) => {
+router.post('/doctors', upload.single('photo'), asyncHandler(async (req, res) => {
   try {
     const { name, specialty, bio, active } = req.body;
 
@@ -114,17 +125,20 @@ router.post('/doctors', upload.single('photo'), async (req, res) => {
       active: active === 'on'
     });
 
+    if (wantsJson(req)) return res.json({ success: true });
     res.redirect('/admin/doctors');
   } catch (err) {
+    const message = err.message || 'Could not save doctor.';
+    if (wantsJson(req)) return res.status(400).json({ success: false, error: message });
     res.status(400).render('admin/doctor-form', {
       title: 'Add Doctor',
       doctor: req.body,
-      error: err.message || 'Could not save doctor.'
+      error: message
     });
   }
-});
+}));
 
-router.get('/doctors/:id/edit', async (req, res) => {
+router.get('/doctors/:id/edit', asyncHandler(async (req, res) => {
   const doctor = await Doctor.findById(req.params.id);
   if (!doctor) return res.redirect('/admin/doctors');
 
@@ -133,13 +147,14 @@ router.get('/doctors/:id/edit', async (req, res) => {
     doctor,
     error: null
   });
-});
+}));
 
-router.post('/doctors/:id', upload.single('photo'), async (req, res) => {
+router.post('/doctors/:id', upload.single('photo'), asyncHandler(async (req, res) => {
   try {
     const doctor = await Doctor.findById(req.params.id);
 
     if (!doctor) {
+      if (wantsJson(req)) return res.status(404).json({ success: false, error: 'Doctor not found.' });
       return res.redirect('/admin/doctors');
     }
 
@@ -171,8 +186,11 @@ router.post('/doctors/:id', upload.single('photo'), async (req, res) => {
       { runValidators: true }
     );
 
+    if (wantsJson(req)) return res.json({ success: true });
     res.redirect('/admin/doctors');
   } catch (err) {
+    const message = err.message || 'Could not update doctor.';
+    if (wantsJson(req)) return res.status(400).json({ success: false, error: message });
     res.status(400).render('admin/doctor-form', {
       title: 'Edit Doctor',
       doctor: {
@@ -180,35 +198,30 @@ router.post('/doctors/:id', upload.single('photo'), async (req, res) => {
         _id: req.params.id,
         photoUrl: ''
       },
-      error: err.message || 'Could not update doctor.'
+      error: message
     });
   }
-});
+}));
 
-router.post('/doctors/:id/delete', async (req, res) => {
-  const wantsJson =
-    req.xhr ||
-    req.get('X-Requested-With') === 'XMLHttpRequest' ||
-    (req.get('Accept') || '').includes('application/json');
-
+router.post('/doctors/:id/delete', asyncHandler(async (req, res) => {
   try {
     await Doctor.findByIdAndDelete(req.params.id);
-    if (wantsJson) return res.json({ success: true });
+    if (wantsJson(req)) return res.json({ success: true });
     res.redirect('/admin/doctors');
   } catch (err) {
-    if (wantsJson) return res.status(500).json({ success: false, error: 'Could not delete doctor.' });
+    if (wantsJson(req)) return res.status(500).json({ success: false, error: 'Could not delete doctor.' });
     res.redirect('/admin/doctors');
   }
-});
+}));
 
 /* ---------------- CEO MESSAGE ---------------- */
 
-router.get('/ceo', async (req, res) => {
+router.get('/ceo', asyncHandler(async (req, res) => {
   const ceo = await CeoInfo.findOne({});
   res.render('admin/ceo', { title: 'CEO Message', ceo, error: null });
-});
+}));
 
-router.post('/ceo', upload.single('photo'), async (req, res) => {
+router.post('/ceo', upload.single('photo'), asyncHandler(async (req, res) => {
   try {
     const { name, title, message } = req.body;
     const updateData = {
@@ -230,25 +243,28 @@ router.post('/ceo', upload.single('photo'), async (req, res) => {
       await CeoInfo.create(updateData);
     }
 
+    if (wantsJson(req)) return res.json({ success: true });
     res.redirect('/admin/ceo');
   } catch (err) {
+    const message = err.message || 'Could not save CEO message.';
+    if (wantsJson(req)) return res.status(400).json({ success: false, error: message });
     const ceo = await CeoInfo.findOne({});
-    res.status(400).render('admin/ceo', { title: 'CEO Message', ceo, error: err.message || 'Could not save CEO message.' });
+    res.status(400).render('admin/ceo', { title: 'CEO Message', ceo, error: message });
   }
-});
+}));
 
 /* ---------------- OUR TEAM ---------------- */
 
-router.get('/team', async (req, res) => {
+router.get('/team', asyncHandler(async (req, res) => {
   const teamMembers = await TeamMember.find({}).sort({ createdAt: -1 });
   res.render('admin/team', { title: 'Our Team', teamMembers });
-});
+}));
 
 router.get('/team/new', (req, res) => {
   res.render('admin/team-form', { title: 'Add Team Member', member: null, error: null });
 });
 
-router.post('/team', upload.single('photo'), async (req, res) => {
+router.post('/team', upload.single('photo'), asyncHandler(async (req, res) => {
   try {
     const { name, title, description, active } = req.body;
 
@@ -271,17 +287,20 @@ router.post('/team', upload.single('photo'), async (req, res) => {
       active: active === 'on'
     });
 
+    if (wantsJson(req)) return res.json({ success: true });
     res.redirect('/admin/team');
   } catch (err) {
+    const message = err.message || 'Could not save team member.';
+    if (wantsJson(req)) return res.status(400).json({ success: false, error: message });
     res.status(400).render('admin/team-form', {
       title: 'Add Team Member',
       member: req.body,
-      error: err.message || 'Could not save team member.'
+      error: message
     });
   }
-});
+}));
 
-router.get('/team/:id/edit', async (req, res) => {
+router.get('/team/:id/edit', asyncHandler(async (req, res) => {
   const member = await TeamMember.findById(req.params.id);
   if (!member) return res.redirect('/admin/team');
 
@@ -290,13 +309,14 @@ router.get('/team/:id/edit', async (req, res) => {
     member,
     error: null
   });
-});
+}));
 
-router.post('/team/:id', upload.single('photo'), async (req, res) => {
+router.post('/team/:id', upload.single('photo'), asyncHandler(async (req, res) => {
   try {
     const member = await TeamMember.findById(req.params.id);
 
     if (!member) {
+      if (wantsJson(req)) return res.status(404).json({ success: false, error: 'Team member not found.' });
       return res.redirect('/admin/team');
     }
 
@@ -324,8 +344,11 @@ router.post('/team/:id', upload.single('photo'), async (req, res) => {
       { runValidators: true }
     );
 
+    if (wantsJson(req)) return res.json({ success: true });
     res.redirect('/admin/team');
   } catch (err) {
+    const message = err.message || 'Could not update team member.';
+    if (wantsJson(req)) return res.status(400).json({ success: false, error: message });
     res.status(400).render('admin/team-form', {
       title: 'Edit Team Member',
       member: {
@@ -333,42 +356,37 @@ router.post('/team/:id', upload.single('photo'), async (req, res) => {
         _id: req.params.id,
         photoUrl: ''
       },
-      error: err.message || 'Could not update team member.'
+      error: message
     });
   }
-});
+}));
 
-router.post('/team/:id/delete', async (req, res) => {
-  const wantsJson =
-    req.xhr ||
-    req.get('X-Requested-With') === 'XMLHttpRequest' ||
-    (req.get('Accept') || '').includes('application/json');
-
+router.post('/team/:id/delete', asyncHandler(async (req, res) => {
   try {
     await TeamMember.findByIdAndDelete(req.params.id);
-    if (wantsJson) return res.json({ success: true });
+    if (wantsJson(req)) return res.json({ success: true });
     res.redirect('/admin/team');
   } catch (err) {
-    if (wantsJson) return res.status(500).json({ success: false, error: 'Could not delete team member.' });
+    if (wantsJson(req)) return res.status(500).json({ success: false, error: 'Could not delete team member.' });
     res.redirect('/admin/team');
   }
-});
+}));
 
 /* ---------------- TREATMENT RESULTS GALLERY ---------------- */
 
-router.get('/gallery', async (req, res) => {
+router.get('/gallery', asyncHandler(async (req, res) => {
   const photos = await Gallery.find({ category: 'Treatment Results' }).sort({ createdAt: -1 });
   res.render('admin/gallery', { title: 'Treatment Results Gallery', photos, error: null });
-});
+}));
 
 /* ---------------- CLINIC GALLERY ---------------- */
 
-router.get('/clinic-gallery', async (req, res) => {
+router.get('/clinic-gallery', asyncHandler(async (req, res) => {
   const photos = await Gallery.find({ category: 'Clinic' }).sort({ createdAt: -1 });
   res.render('admin/clinic-gallery', { title: 'Clinic Gallery', photos, error: null });
-});
+}));
 
-router.post('/clinic-gallery', upload.single('photo'), async (req, res) => {
+router.post('/clinic-gallery', upload.single('photo'), asyncHandler(async (req, res) => {
   try {
     if (!req.file) throw new Error('Please choose an image to upload.');
     const { title } = req.body;
@@ -384,20 +402,23 @@ router.post('/clinic-gallery', upload.single('photo'), async (req, res) => {
       imageUrl: uploaded.secure_url,
       cloudinaryPublicId: uploaded.public_id
     });
+    if (wantsJson(req)) return res.json({ success: true });
     res.redirect('/admin/clinic-gallery');
   } catch (err) {
+    const message = err.message || 'Could not upload photo.';
+    if (wantsJson(req)) return res.status(400).json({ success: false, error: message });
     const photos = await Gallery.find({ category: 'Clinic' }).sort({ createdAt: -1 });
-    res.status(400).render('admin/clinic-gallery', { title: 'Clinic Gallery', photos, error: err.message || 'Could not upload photo.' });
+    res.status(400).render('admin/clinic-gallery', { title: 'Clinic Gallery', photos, error: message });
   }
-});
+}));
 
-router.post('/clinic-gallery/:id/delete', async (req, res) => {
+router.post('/clinic-gallery/:id/delete', asyncHandler(async (req, res) => {
   const photo = await Gallery.findOneAndDelete({ _id: req.params.id, category: 'Clinic' });
   if (photo && photo.cloudinaryPublicId) await destroyCloudinary(photo.cloudinaryPublicId);
   res.redirect('/admin/clinic-gallery');
-});
+}));
 
-router.post('/gallery', upload.single('photo'), async (req, res) => {
+router.post('/gallery', upload.single('photo'), asyncHandler(async (req, res) => {
   try {
     if (!req.file) throw new Error('Please choose an image to upload.');
     const { title, category, treatment } = req.body;
@@ -416,27 +437,30 @@ router.post('/gallery', upload.single('photo'), async (req, res) => {
       imageUrl: uploaded.secure_url,
       cloudinaryPublicId: uploaded.public_id
     });
+    if (wantsJson(req)) return res.json({ success: true });
     res.redirect('/admin/gallery');
   } catch (err) {
+    const message = err.message || 'Could not upload photo.';
+    if (wantsJson(req)) return res.status(400).json({ success: false, error: message });
     const photos = await Gallery.find({ category: 'Treatment Results' }).sort({ createdAt: -1 });
-    res.status(400).render('admin/gallery', { title: 'Treatment Results Gallery', photos, error: err.message || 'Could not upload photo.' });
+    res.status(400).render('admin/gallery', { title: 'Treatment Results Gallery', photos, error: message });
   }
-});
+}));
 
-router.post('/gallery/:id/delete', async (req, res) => {
+router.post('/gallery/:id/delete', asyncHandler(async (req, res) => {
   const photo = await Gallery.findByIdAndDelete(req.params.id);
   if (photo && photo.cloudinaryPublicId) await destroyCloudinary(photo.cloudinaryPublicId);
   res.redirect('/admin/gallery');
-});
+}));
 
 /* ---------------- SERVICES ---------------- */
 
-router.get('/services', async (req, res) => {
+router.get('/services', asyncHandler(async (req, res) => {
   const services = await Service.find({ isAdminAdded: true }).sort({ createdAt: 1 });
   res.render('admin/services', { title: 'Manage Services', services, error: null });
-});
+}));
 
-router.post('/services', async (req, res) => {
+router.post('/services', asyncHandler(async (req, res) => {
   try {
     const name = (req.body.name || '').trim();
     const price = Number(req.body.price);
@@ -453,15 +477,17 @@ router.post('/services', async (req, res) => {
     } else {
       await Service.create({ name, price, active: true, isAdminAdded: true, videoUrl });
     }
+    if (wantsJson(req)) return res.json({ success: true });
     res.redirect('/admin/services');
   } catch (err) {
-    const services = await Service.find({ isAdminAdded: true }).sort({ createdAt: 1 });
     const message = err.code === 11000 ? 'A service with this name already exists.' : (err.message || 'Could not add service.');
+    if (wantsJson(req)) return res.status(400).json({ success: false, error: message });
+    const services = await Service.find({ isAdminAdded: true }).sort({ createdAt: 1 });
     res.status(400).render('admin/services', { title: 'Manage Services', services, error: message });
   }
-});
+}));
 
-router.post('/services/:id', async (req, res) => {
+router.post('/services/:id', asyncHandler(async (req, res) => {
   try {
     const name = (req.body.name || '').trim();
     const price = Number(req.body.price);
@@ -469,27 +495,29 @@ router.post('/services/:id', async (req, res) => {
     if (!name) throw new Error('Please enter a service name.');
     if (!Number.isFinite(price) || price < 0) throw new Error('Please enter a valid price.');
     await Service.findByIdAndUpdate(req.params.id, { name, price, videoUrl }, { runValidators: true });
+    if (wantsJson(req)) return res.json({ success: true });
     res.redirect('/admin/services');
   } catch (err) {
-    const services = await Service.find({ isAdminAdded: true }).sort({ createdAt: 1 });
     const message = err.code === 11000 ? 'A service with this name already exists.' : (err.message || 'Could not update service.');
+    if (wantsJson(req)) return res.status(400).json({ success: false, error: message });
+    const services = await Service.find({ isAdminAdded: true }).sort({ createdAt: 1 });
     res.status(400).render('admin/services', { title: 'Manage Services', services, error: message });
   }
-});
+}));
 
-router.post('/services/:id/delete', async (req, res) => {
+router.post('/services/:id/delete', asyncHandler(async (req, res) => {
   await Service.findByIdAndDelete(req.params.id);
   res.redirect('/admin/services');
-});
+}));
 
 /* ---------------- CUSTOMER REVIEWS ---------------- */
 
-router.get('/reviews', async (req, res) => {
+router.get('/reviews', asyncHandler(async (req, res) => {
   const reviews = await Review.find({}).sort({ createdAt: -1 });
   res.render('admin/reviews', { title: 'Customer Reviews', reviews, error: null });
-});
+}));
 
-router.post('/reviews', async (req, res) => {
+router.post('/reviews', asyncHandler(async (req, res) => {
   try {
     const customerName = (req.body.customerName || '').trim();
     const rating = Number(req.body.rating);
@@ -498,14 +526,17 @@ router.post('/reviews', async (req, res) => {
     if (!Number.isFinite(rating) || rating < 1 || rating > 5) throw new Error('Please select a valid rating.');
     if (!reviewText) throw new Error('Please enter the review text.');
     await Review.create({ customerName, rating, reviewText });
+    if (wantsJson(req)) return res.json({ success: true });
     res.redirect('/admin/reviews');
   } catch (err) {
+    const message = err.message || 'Could not add review.';
+    if (wantsJson(req)) return res.status(400).json({ success: false, error: message });
     const reviews = await Review.find({}).sort({ createdAt: -1 });
-    res.status(400).render('admin/reviews', { title: 'Customer Reviews', reviews, error: err.message || 'Could not add review.' });
+    res.status(400).render('admin/reviews', { title: 'Customer Reviews', reviews, error: message });
   }
-});
+}));
 
-router.post('/reviews/:id', async (req, res) => {
+router.post('/reviews/:id', asyncHandler(async (req, res) => {
   try {
     const customerName = (req.body.customerName || '').trim();
     const rating = Number(req.body.rating);
@@ -514,21 +545,24 @@ router.post('/reviews/:id', async (req, res) => {
     if (!Number.isFinite(rating) || rating < 1 || rating > 5) throw new Error('Please select a valid rating.');
     if (!reviewText) throw new Error('Please enter the review text.');
     await Review.findByIdAndUpdate(req.params.id, { customerName, rating, reviewText }, { runValidators: true });
+    if (wantsJson(req)) return res.json({ success: true });
     res.redirect('/admin/reviews');
   } catch (err) {
+    const message = err.message || 'Could not update review.';
+    if (wantsJson(req)) return res.status(400).json({ success: false, error: message });
     const reviews = await Review.find({}).sort({ createdAt: -1 });
-    res.status(400).render('admin/reviews', { title: 'Customer Reviews', reviews, error: err.message || 'Could not update review.' });
+    res.status(400).render('admin/reviews', { title: 'Customer Reviews', reviews, error: message });
   }
-});
+}));
 
-router.post('/reviews/:id/delete', async (req, res) => {
+router.post('/reviews/:id/delete', asyncHandler(async (req, res) => {
   await Review.findByIdAndDelete(req.params.id);
   res.redirect('/admin/reviews');
-});
+}));
 
 /* ---------------- APPOINTMENTS ---------------- */
 
-router.get('/appointments', async (req, res) => {
+router.get('/appointments', asyncHandler(async (req, res) => {
   const statusFilter = req.query.status;
   const filter = statusFilter ? { status: statusFilter } : {};
   const appointments = await Appointment.find(filter)
@@ -539,18 +573,14 @@ router.get('/appointments', async (req, res) => {
     appointments,
     statusFilter: statusFilter || ''
   });
-});
+}));
 
-router.post('/appointments/:id/status', async (req, res) => {
+router.post('/appointments/:id/status', asyncHandler(async (req, res) => {
   const { status } = req.body;
   const allowed = ['pending', 'confirmed', 'cancelled', 'completed'];
-  const wantsJson =
-    req.xhr ||
-    req.get('X-Requested-With') === 'XMLHttpRequest' ||
-    (req.get('Accept') || '').includes('application/json');
 
   if (!allowed.includes(status)) {
-    if (wantsJson) return res.status(400).json({ success: false, error: 'Invalid status.' });
+    if (wantsJson(req)) return res.status(400).json({ success: false, error: 'Invalid status.' });
     return res.redirect('back');
   }
 
@@ -562,23 +592,23 @@ router.post('/appointments/:id/status', async (req, res) => {
     );
 
     if (!appointment) {
-      if (wantsJson) return res.status(404).json({ success: false, error: 'Appointment not found.' });
+      if (wantsJson(req)) return res.status(404).json({ success: false, error: 'Appointment not found.' });
       return res.redirect('back');
     }
 
-    if (wantsJson) {
+    if (wantsJson(req)) {
       return res.json({ success: true, status: appointment.status, token: appointment.token });
     }
     return res.redirect('back');
   } catch (err) {
-    if (wantsJson) return res.status(500).json({ success: false, error: 'Could not update status.' });
+    if (wantsJson(req)) return res.status(500).json({ success: false, error: 'Could not update status.' });
     return res.redirect('back');
   }
-});
+}));
 
-router.post('/appointments/:id/delete', async (req, res) => {
+router.post('/appointments/:id/delete', asyncHandler(async (req, res) => {
   await Appointment.findByIdAndDelete(req.params.id);
   res.redirect('back');
-});
+}));
 
 module.exports = router;

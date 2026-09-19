@@ -1,0 +1,15 @@
+<%- include('partials/admin-header') %>
+
+<div class="card" style="max-width:520px;margin:60px auto;text-align:center;padding:40px 30px;">
+  <h1 style="margin-top:0;">Something went wrong</h1>
+  <p class="muted">
+    Your last action may still have been saved — this page just couldn't load right after.
+    Please go back and check the list; if the item is there, everything worked.
+  </p>
+  <div class="form-actions" style="justify-content:center;margin-top:22px;">
+    <a href="/admin/dashboard" class="btn btn-primary">Back to Dashboard</a>
+    <a href="javascript:history.back()" class="btn btn-outline">Go Back</a>
+  </div>
+</div>
+
+<%- include('partials/admin-footer') %>

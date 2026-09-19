@@ -5,10 +5,12 @@ const fileFilter = (_req, file, cb) => {
   cb(new Error('Only JPG, PNG, WEBP or GIF image files are allowed.'));
 };
 
-// Keep uploads in memory so they can be sent directly to Cloudinary.
-// No clinic/doctor photos are written to the server disk.
+// Accept large raw uploads here (e.g. straight-from-phone photos can be
+// 10-15MB) — utils/cloudinary.js compresses every image down to 5MB or
+// under before it's actually sent to Cloudinary, so this is just the
+// ceiling on what multer will accept into memory at all.
 module.exports = multer({
   storage: multer.memoryStorage(),
   fileFilter,
-  limits: { fileSize: 5 * 1024 * 1024 }
+  limits: { fileSize: 25 * 1024 * 1024 }
 });

@@ -1,5 +1,95 @@
       </div>
     </main>
   </div>
+
+  <script>
+    (function () {
+      function showAdminToast(message, isError) {
+        var toast = document.createElement('div');
+        toast.className = 'admin-toast' + (isError ? ' admin-toast-error' : '');
+        toast.textContent = message;
+        document.body.appendChild(toast);
+        // Next frame so the transition actually runs instead of jumping straight to "shown".
+        requestAnimationFrame(function () {
+          requestAnimationFrame(function () { toast.classList.add('show'); });
+        });
+        setTimeout(function () {
+          toast.classList.remove('show');
+          setTimeout(function () { toast.remove(); }, 300);
+        }, 2200);
+      }
+      window.showAdminToast = showAdminToast;
+
+      // Any admin add/edit form marked class="ajax-form" submits via fetch
+      // instead of a full page navigation, so a failed page-render afterwards
+      // can never show up as a crash screen — the person just sees a "Done!"
+      // popup right when the save succeeds.
+      //
+      // Optional data-* attributes on the <form>:
+      //   data-success-message="Doctor added!"   (defaults to "Done!")
+      //   data-redirect="/admin/doctors"          (where to go after the toast; omit to stay put)
+      //   data-redirect-delay="900"               (ms to wait before redirecting; default 900)
+      document.querySelectorAll('form.ajax-form').forEach(function (form) {
+        form.addEventListener('submit', function (e) {
+          e.preventDefault();
+
+          var btn = form.querySelector('button[type="submit"]');
+          if (btn) {
+            if (btn.dataset.submitted) return; // guard against double submits
+            btn.dataset.submitted = 'true';
+            btn.dataset.originalText = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = form.dataset.savingText || 'Saving...';
+          }
+
+          var existingError = form.querySelector('.alert-error');
+          if (existingError) existingError.remove();
+
+          fetch(form.action, {
+            method: 'POST',
+            body: new FormData(form),
+            headers: { 'X-Requested-With': 'XMLHttpRequest', Accept: 'application/json' }
+          })
+            .then(function (response) {
+              return response
+                .json()
+                .catch(function () { return null; })
+                .then(function (data) {
+                  return { ok: response.ok, data: data };
+                });
+            })
+            .then(function (result) {
+              if (!result.ok || !result.data || !result.data.success) {
+                throw new Error((result.data && result.data.error) || 'Something went wrong. Please try again.');
+              }
+
+              showAdminToast(form.dataset.successMessage || 'Done!');
+
+              if (btn) {
+                btn.disabled = false;
+                btn.dataset.submitted = '';
+                btn.textContent = btn.dataset.originalText;
+              }
+
+              if (form.dataset.reset === 'true') form.reset();
+
+              var redirectTo = form.dataset.redirect;
+              if (redirectTo) {
+                var delay = Number(form.dataset.redirectDelay) || 900;
+                setTimeout(function () { window.location.href = redirectTo; }, delay);
+              }
+            })
+            .catch(function (err) {
+              showAdminToast(err.message || 'Something went wrong. Please try again.', true);
+              if (btn) {
+                btn.disabled = false;
+                btn.dataset.submitted = '';
+                btn.textContent = btn.dataset.originalText;
+              }
+            });
+        });
+      });
+    })();
+  </script>
 </body>
 </html>

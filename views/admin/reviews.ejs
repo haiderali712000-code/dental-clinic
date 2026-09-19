@@ -11,7 +11,7 @@
 
 <div class="card" style="margin-bottom:20px;">
   <h2 style="margin-top:0;">Add Review</h2>
-  <form action="/admin/reviews" method="POST" class="review-add-form">
+  <form action="/admin/reviews" method="POST" class="review-add-form ajax-form" data-success-message="Review added!" data-redirect="/admin/reviews" data-reset="true">
     <label>Customer Name<input type="text" name="customerName" required placeholder="e.g. Ayesha Khan"></label>
     <label>Rating
       <select name="rating" required>
@@ -34,7 +34,7 @@
   <div class="review-admin-list">
     <% reviews.forEach(function(review) { %>
       <div class="review-admin-row">
-        <form action="/admin/reviews/<%= review._id %>" method="POST" class="review-edit-form">
+        <form action="/admin/reviews/<%= review._id %>" method="POST" class="review-edit-form ajax-form" data-success-message="Review updated!" data-redirect="/admin/reviews">
           <input type="text" name="customerName" value="<%= review.customerName %>" required aria-label="Customer name">
           <select name="rating" aria-label="Rating">
             <option value="5" <%= review.rating === 5 ? 'selected' : '' %>>★★★★★ (5)</option>

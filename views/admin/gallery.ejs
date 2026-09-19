@@ -11,7 +11,7 @@
   <div class="alert alert-error"><%= error %></div>
 <% } %>
 
-<form action="/admin/gallery" method="POST" enctype="multipart/form-data" class="form-card">
+<form action="/admin/gallery" method="POST" enctype="multipart/form-data" class="form-card ajax-form" data-success-message="Photo uploaded!" data-redirect="/admin/gallery" data-reset="true">
   <label>
     Photo Title *
     <input type="text" name="title" required placeholder="e.g. Scaling Result - Case 01" />

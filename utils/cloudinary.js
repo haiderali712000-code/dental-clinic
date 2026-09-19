@@ -1,4 +1,5 @@
 const cloudinary = require('cloudinary').v2;
+const { compressToLimit } = require('./imageCompress');
 
 // Configure lazily so values from .env are available even if this module is
 // required before another part of the app finishes loading environment config.
@@ -30,8 +31,9 @@ function ensureConfigured() {
   );
 }
 
-function uploadBuffer(buffer, folder) {
+async function uploadBuffer(buffer, folder) {
   ensureConfigured();
+  const compressedBuffer = await compressToLimit(buffer);
   return new Promise((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
       {
@@ -46,7 +48,7 @@ function uploadBuffer(buffer, folder) {
         resolve(result);
       }
     );
-    stream.end(buffer);
+    stream.end(compressedBuffer);
   });
 }
 

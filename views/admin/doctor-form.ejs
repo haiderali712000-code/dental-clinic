@@ -10,7 +10,9 @@
   action="<%= doctor && doctor._id ? '/admin/doctors/' + doctor._id : '/admin/doctors' %>"
   method="POST"
   enctype="multipart/form-data"
-  class="form-card"
+  class="form-card ajax-form"
+  data-success-message="<%= doctor && doctor._id ? 'Doctor updated!' : 'Doctor added!' %>"
+  data-redirect="/admin/doctors"
 >
   <label>
     Name *
@@ -53,18 +55,5 @@
     <a href="/admin/doctors" class="btn btn-outline">Cancel</a>
   </div>
 </form>
-
-<script>
-  document.querySelector('.form-card').addEventListener('submit', function () {
-    var btn = document.getElementById('doctorSubmitBtn');
-    if (btn.dataset.submitted) {
-      // Already submitted once — block any further duplicate submits.
-      return false;
-    }
-    btn.dataset.submitted = 'true';
-    btn.disabled = true;
-    btn.textContent = 'Saving...';
-  });
-</script>
 
 <%- include('../partials/admin-footer') %>

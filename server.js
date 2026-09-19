@@ -74,6 +74,30 @@ app.use((req, res) => {
   res.status(404).render('404', { title: 'Page Not Found' });
 });
 
+// Catch-all error handler. Without this, any error thrown after a request
+// already succeeded (e.g. a brief Mongo hiccup while rendering the next
+// page) falls through to Vercel's raw crash screen instead of the site.
+// eslint-disable-next-line no-unused-vars
+app.use((err, req, res, next) => {
+  console.error(err);
+  if (res.headersSent) return;
+
+  const wantsJson =
+    req.xhr ||
+    req.get('X-Requested-With') === 'XMLHttpRequest' ||
+    (req.get('Accept') || '').includes('application/json');
+
+  if (wantsJson) {
+    return res.status(500).json({ success: false, error: 'Something went wrong. Please try again.' });
+  }
+
+  if (req.path.startsWith('/admin')) {
+    return res.status(500).render('admin-error', { title: 'Something Went Wrong' });
+  }
+
+  res.status(500).send('Something went wrong. Please refresh the page or try again shortly.');
+});
+
 
 module.exports = app;
 
