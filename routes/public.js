@@ -61,7 +61,7 @@ router.get('/', asyncHandler(async (req, res) => {
     Gallery.find({ category: 'Clinic', active: true }).sort({ createdAt: -1 })
   ]);
   const services = await getServices();
-  const reviews = await Review.find({}).sort({ createdAt: -1 });
+  const reviews = await Review.find({ approved: true }).sort({ createdAt: -1 });
   const ads = await Ad.find({ active: true }).sort({ order: 1, createdAt: -1 });
   res.render('index', { title: 'Home', doctors, ceo, teamMembers, services, treatmentResults, clinicGallery, reviews, ads, canonicalUrl: getCanonical(req) });
 }));
@@ -83,7 +83,7 @@ router.get('/services/:id', asyncHandler(async (req, res) => {
 }));
 
 router.get('/reviews', asyncHandler(async (req, res) => {
-  const reviews = await Review.find({}).sort({ createdAt: -1 });
+  const reviews = await Review.find({ approved: true }).sort({ createdAt: -1 });
   res.render('reviews-list', { title: 'Patient Reviews', reviews, canonicalUrl: getCanonical(req) });
 }));
 
@@ -111,15 +111,15 @@ router.post('/reviews', upload.none(), asyncHandler(async (req, res) => {
     return res.redirect('/?reviewError=1#testimonials');
   }
 
-  const review = await Review.create({ customerName, rating, reviewText });
+  const review = await Review.create({ customerName, rating, reviewText, approved: false });
 
   if (wantsJson) {
     return res.json({
       success: true,
-      review: { customerName: review.customerName, rating: review.rating, reviewText: review.reviewText }
+      pending: true
     });
   }
-  res.redirect('/?reviewSubmitted=1#testimonials');
+  res.redirect('/?reviewSubmitted=1&pending=1#testimonials');
 }));
 
 router.get('/team', asyncHandler(async (req, res) => {

@@ -3,7 +3,7 @@
 <div class="page-header">
   <div>
     <h1>Customer Reviews</h1>
-    <p class="muted">Add, edit or remove the reviews shown in the "What Our Customers Say" section on the homepage.</p>
+    <p class="muted">Reviews submitted on the website need approval here before they appear in the "What Our Customers Say" section. Reviews you add yourself below publish immediately.</p>
   </div>
 </div>
 
@@ -27,13 +27,39 @@
   </form>
 </div>
 
-<h2 class="admin-section-title">All Reviews</h2>
-<p class="muted">Reviews submitted on the website and reviews you add here both publish immediately. Remove any you don't want shown using Delete.</p>
-<% if (reviews.length === 0) { %>
-  <div class="card empty-card">No reviews added yet. Reviews you add here will appear in the "What Our Customers Say" section on the homepage.</div>
+<h2 class="admin-section-title">Pending Approval<% if (pendingReviews.length) { %> (<%= pendingReviews.length %>)<% } %></h2>
+<p class="muted">Reviews submitted by patients on the website. Approve to publish them, or delete to reject.</p>
+<% if (pendingReviews.length === 0) { %>
+  <div class="card empty-card">No reviews waiting for approval.</div>
+<% } else { %>
+  <div class="review-admin-list" style="margin-bottom:32px;">
+    <% pendingReviews.forEach(function(review) { %>
+      <div class="review-admin-row">
+        <div style="flex:1;">
+          <strong><%= review.customerName %></strong>
+          <div class="review-stars" aria-label="<%= review.rating %> out of 5 stars">
+            <% for (let i = 1; i <= 5; i++) { %><span class="<%= i <= review.rating ? 'star-filled' : 'star-empty' %>">★</span><% } %>
+          </div>
+          <p><%= review.reviewText %></p>
+        </div>
+        <form action="/admin/reviews/<%= review._id %>/approve" method="POST">
+          <button type="submit" class="btn btn-primary">Approve</button>
+        </form>
+        <form action="/admin/reviews/<%= review._id %>/delete" method="POST" onsubmit="return confirm('Delete this review?');">
+          <button type="submit" class="btn btn-danger">Delete</button>
+        </form>
+      </div>
+    <% }) %>
+  </div>
+<% } %>
+
+<h2 class="admin-section-title">Published Reviews</h2>
+<p class="muted">These are live on the site. Remove any you don't want shown, or unpublish to move it back to pending.</p>
+<% if (approvedReviews.length === 0) { %>
+  <div class="card empty-card">No published reviews yet.</div>
 <% } else { %>
   <div class="review-admin-list">
-    <% reviews.forEach(function(review) { %>
+    <% approvedReviews.forEach(function(review) { %>
       <div class="review-admin-row">
         <form action="/admin/reviews/<%= review._id %>" method="POST" class="review-edit-form ajax-form" data-success-message="Review updated!" data-redirect="/admin/reviews">
           <input type="text" name="customerName" value="<%= review.customerName %>" required aria-label="Customer name">
@@ -46,6 +72,9 @@
           </select>
           <textarea name="reviewText" rows="2" required aria-label="Review text"><%= review.reviewText %></textarea>
           <button type="submit" class="btn btn-primary">Save</button>
+        </form>
+        <form action="/admin/reviews/<%= review._id %>/unapprove" method="POST">
+          <button type="submit" class="btn btn-outline">Unpublish</button>
         </form>
         <form action="/admin/reviews/<%= review._id %>/delete" method="POST" onsubmit="return confirm('Delete this review?');">
           <button type="submit" class="btn btn-danger">Delete</button>

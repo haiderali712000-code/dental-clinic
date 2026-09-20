@@ -620,8 +620,10 @@ router.post('/services/:id/delete', asyncHandler(async (req, res) => {
 /* ---------------- CUSTOMER REVIEWS ---------------- */
 
 router.get('/reviews', asyncHandler(async (req, res) => {
-  const reviews = await Review.find({}).sort({ createdAt: -1 });
-  res.render('admin/reviews', { title: 'Customer Reviews', reviews, error: null });
+  const allReviews = await Review.find({}).sort({ createdAt: -1 });
+  const pendingReviews = allReviews.filter((r) => !r.approved);
+  const approvedReviews = allReviews.filter((r) => r.approved);
+  res.render('admin/reviews', { title: 'Customer Reviews', pendingReviews, approvedReviews, error: null });
 }));
 
 router.post('/reviews', upload.none(), asyncHandler(async (req, res) => {
@@ -632,14 +634,17 @@ router.post('/reviews', upload.none(), asyncHandler(async (req, res) => {
     if (!customerName) throw new Error('Please enter the customer name.');
     if (!Number.isFinite(rating) || rating < 1 || rating > 5) throw new Error('Please select a valid rating.');
     if (!reviewText) throw new Error('Please enter the review text.');
-    await Review.create({ customerName, rating, reviewText });
+    // Reviews added here by staff are trusted and publish immediately.
+    await Review.create({ customerName, rating, reviewText, approved: true });
     if (wantsJson(req)) return res.json({ success: true });
     res.redirect('/admin/reviews');
   } catch (err) {
     const message = err.message || 'Could not add review.';
     if (wantsJson(req)) return res.status(400).json({ success: false, error: message });
-    const reviews = await Review.find({}).sort({ createdAt: -1 });
-    res.status(400).render('admin/reviews', { title: 'Customer Reviews', reviews, error: message });
+    const allReviews = await Review.find({}).sort({ createdAt: -1 });
+    const pendingReviews = allReviews.filter((r) => !r.approved);
+    const approvedReviews = allReviews.filter((r) => r.approved);
+    res.status(400).render('admin/reviews', { title: 'Customer Reviews', pendingReviews, approvedReviews, error: message });
   }
 }));
 
@@ -657,9 +662,23 @@ router.post('/reviews/:id', upload.none(), asyncHandler(async (req, res) => {
   } catch (err) {
     const message = err.message || 'Could not update review.';
     if (wantsJson(req)) return res.status(400).json({ success: false, error: message });
-    const reviews = await Review.find({}).sort({ createdAt: -1 });
-    res.status(400).render('admin/reviews', { title: 'Customer Reviews', reviews, error: message });
+    const allReviews = await Review.find({}).sort({ createdAt: -1 });
+    const pendingReviews = allReviews.filter((r) => !r.approved);
+    const approvedReviews = allReviews.filter((r) => r.approved);
+    res.status(400).render('admin/reviews', { title: 'Customer Reviews', pendingReviews, approvedReviews, error: message });
   }
+}));
+
+router.post('/reviews/:id/approve', asyncHandler(async (req, res) => {
+  await Review.findByIdAndUpdate(req.params.id, { approved: true });
+  if (wantsJson(req)) return res.json({ success: true });
+  res.redirect('/admin/reviews');
+}));
+
+router.post('/reviews/:id/unapprove', asyncHandler(async (req, res) => {
+  await Review.findByIdAndUpdate(req.params.id, { approved: false });
+  if (wantsJson(req)) return res.json({ success: true });
+  res.redirect('/admin/reviews');
 }));
 
 router.post('/reviews/:id/delete', asyncHandler(async (req, res) => {

@@ -356,7 +356,7 @@
 
     <div class="review-form-card" id="reviewFormCard" hidden>
       <h3>Share Your Experience</h3>
-      <p class="muted">Your review will be posted right away.</p>
+      <p class="muted">Reviews are checked by our team before they appear on the site.</p>
 
       <div id="reviewFormError"></div>
 
@@ -448,34 +448,9 @@
             throw new Error((result.data && result.data.error) || 'Something went wrong. Please try again.');
           }
 
-          showSiteToast('Review added!');
+          showSiteToast('Thanks! Your review is pending approval and will appear once approved.');
           form.reset();
           card.hidden = true;
-
-          // Reflect the new review immediately as the featured one, no reload needed.
-          var review = result.data.review;
-          if (review) {
-            var grid = document.querySelector('.testimonial-grid-single, .testimonial-grid');
-            if (grid) {
-              var stars = '';
-              for (var i = 1; i <= 5; i++) stars += '<span class="' + (i <= review.rating ? 'star-filled' : 'star-empty') + '">★</span>';
-              grid.innerHTML =
-                '<div class="testimonial-card"><div class="quote-mark">\u201c</div><div>' +
-                '<div class="review-stars">' + stars + '</div>' +
-                '<p></p><span class="review-note review-author">— </span></div></div>';
-              grid.querySelector('p').textContent = review.reviewText;
-              grid.querySelector('.review-author').append(review.customerName);
-            }
-            var viewAllLink = document.querySelector('.testimonial-actions a[href="/reviews"]');
-            if (!viewAllLink) {
-              var actions = document.querySelector('.testimonial-actions');
-              var a = document.createElement('a');
-              a.href = '/reviews';
-              a.className = 'btn btn-outline';
-              a.textContent = 'View All Reviews →';
-              actions.insertBefore(a, actions.firstChild);
-            }
-          }
         })
         .catch(function (err) {
           errorBox.innerHTML = '<div class="alert alert-error">' + (err.message || 'Something went wrong. Please try again.') + '</div>';
