@@ -15,6 +15,25 @@
   <title><%= title %> | H.I.K.S Dental Studio</title>
   <link rel="icon" type="image/png" href="/images/hiks-logo.png" />
   <link rel="stylesheet" href="/css/style.css" />
+  <style>
+    .site-header .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .site-header .brand-name {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #0B1F3A;
+      white-space: nowrap;
+      line-height: 1.1;
+    }
+    @media (max-width: 480px) {
+      .site-header .brand-name {
+        font-size: 0.85rem;
+      }
+    }
+  </style>
   <% if (title === 'Home') { %>
   <script type="application/ld+json">
   <%- JSON.stringify({
@@ -36,6 +55,7 @@
     <div class="container header-inner">
       <a href="/#home" class="brand" aria-label="H.I.K.S Dental Studio home">
         <img src="/images/hiks-tooth-logo.png" alt="H.I.K.S Dental Studio tooth logo" />
+        <span class="brand-name">H.I.K.S Dental Studio</span>
       </a>
       <button class="nav-toggle" type="button" aria-label="Open menu" aria-expanded="false" onclick="toggleNav()">☰</button>
       <nav class="main-nav" id="mainNav">
