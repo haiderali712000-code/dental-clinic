@@ -42,6 +42,11 @@ router.get('/services/:id', asyncHandler(async (req, res) => {
   res.render('service-detail', { title: service.name, service, canonicalUrl: getCanonical(req) });
 }));
 
+router.get('/reviews', asyncHandler(async (req, res) => {
+  const reviews = await Review.find({ approved: true }).sort({ createdAt: -1 });
+  res.render('reviews-list', { title: 'Patient Reviews', reviews, canonicalUrl: getCanonical(req) });
+}));
+
 router.post('/reviews', asyncHandler(async (req, res) => {
   const customerName = (req.body.customerName || '').trim();
   const rating = Number(req.body.rating);

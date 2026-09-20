@@ -204,25 +204,31 @@
   <div class="container">
     <div class="section-heading reference-heading"><div><span class="section-kicker">PATIENT TESTIMONIALS</span><h2>What Our Customers Say</h2></div></div>
     <% if (reviews && reviews.length) { %>
-      <div class="testimonial-grid">
-        <% reviews.forEach(function(review) { %>
-          <div class="testimonial-card">
-            <div class="quote-mark">“</div>
-            <div>
-              <div class="review-stars" aria-label="<%= review.rating %> out of 5 stars">
-                <% for (let i = 1; i <= 5; i++) { %><span class="<%= i <= review.rating ? 'star-filled' : 'star-empty' %>">★</span><% } %>
-              </div>
-              <p><%= review.reviewText %></p>
-              <span class="review-note review-author">— <%= review.customerName %></span>
+      <% const featuredReview = reviews[0]; %>
+      <div class="testimonial-grid testimonial-grid-single">
+        <div class="testimonial-card">
+          <div class="quote-mark">“</div>
+          <div>
+            <div class="review-stars" aria-label="<%= featuredReview.rating %> out of 5 stars">
+              <% for (let i = 1; i <= 5; i++) { %><span class="<%= i <= featuredReview.rating ? 'star-filled' : 'star-empty' %>">★</span><% } %>
             </div>
+            <p><%= featuredReview.reviewText %></p>
+            <span class="review-note review-author">— <%= featuredReview.customerName %></span>
           </div>
-        <% }) %>
+        </div>
       </div>
     <% } else { %>
       <div class="testimonial-card"><div class="quote-mark">“</div><div><p>Patient reviews can be displayed here once verified reviews are provided by the clinic.</p><span class="review-note">Only genuine patient feedback should be published.</span></div></div>
     <% } %>
 
-    <div class="review-form-card">
+    <div class="testimonial-actions">
+      <% if (reviews && reviews.length > 0) { %>
+        <a href="/reviews" class="btn btn-outline">View All Reviews →</a>
+      <% } %>
+      <button type="button" class="btn btn-primary" id="openReviewFormBtn">+ Add a Review</button>
+    </div>
+
+    <div class="review-form-card" id="reviewFormCard" <%= (reviewSubmitted || reviewError) ? '' : 'hidden' %>>
       <h3>Share Your Experience</h3>
       <p class="muted">Your review will appear here once our team reviews it.</p>
 
@@ -265,6 +271,18 @@
     </div>
   </div>
 </section>
+
+<script>
+  (function () {
+    var btn = document.getElementById('openReviewFormBtn');
+    var card = document.getElementById('reviewFormCard');
+    if (!btn || !card) return;
+    btn.addEventListener('click', function () {
+      card.hidden = !card.hidden;
+      if (!card.hidden) card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    });
+  })();
+</script>
 
 <section class="section before-after-reference" id="before-after">
   <div class="container">

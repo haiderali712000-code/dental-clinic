@@ -1,0 +1,38 @@
+<%- include('partials/header') %>
+
+<section class="page-hero-simple">
+  <div class="container">
+    <span class="section-kicker">PATIENT TESTIMONIALS</span>
+    <h1>What Our Patients Say</h1>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <% if (reviews && reviews.length) { %>
+      <div class="testimonial-grid">
+        <% reviews.forEach(function(review) { %>
+          <div class="testimonial-card">
+            <div class="quote-mark">“</div>
+            <div>
+              <div class="review-stars" aria-label="<%= review.rating %> out of 5 stars">
+                <% for (let i = 1; i <= 5; i++) { %><span class="<%= i <= review.rating ? 'star-filled' : 'star-empty' %>">★</span><% } %>
+              </div>
+              <p><%= review.reviewText %></p>
+              <span class="review-note review-author">— <%= review.customerName %></span>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+    <% } else { %>
+      <p class="muted">No reviews yet — be the first to share your experience.</p>
+    <% } %>
+
+    <div class="form-actions" style="margin-top:28px;justify-content:center;">
+      <a href="/#testimonials" class="btn btn-primary">+ Add a Review</a>
+      <a href="/" class="btn btn-outline">← Back to Home</a>
+    </div>
+  </div>
+</section>
+
+<%- include('partials/footer') %>
