@@ -10,6 +10,7 @@ const Gallery = require('../models/Gallery');
 const Service = require('../models/Service');
 const Review = require('../models/Review');
 const Ad = require('../models/Ad');
+const PageView = require('../models/PageView');
 const upload = require('../utils/upload');
 const { uploadBuffer, destroy: destroyCloudinary } = require('../utils/cloudinary');
 
@@ -715,6 +716,97 @@ router.post('/appointments/:id/status', asyncHandler(async (req, res) => {
 router.post('/appointments/:id/delete', asyncHandler(async (req, res) => {
   await Appointment.findByIdAndDelete(req.params.id);
   res.redirect('back');
+}));
+
+/* ---------------- VISITORS / ANALYTICS ---------------- */
+
+router.get('/visitors', asyncHandler(async (req, res) => {
+  const now = new Date();
+  const startOfToday = new Date(now);
+  startOfToday.setHours(0, 0, 0, 0);
+  const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+  const [
+    viewsToday,
+    uniqueTodayIds,
+    views7,
+    unique7Ids,
+    views30,
+    allTimeViews,
+    allTimeVisitorIds,
+    dayAgg,
+    pageAgg,
+    referrerAgg
+  ] = await Promise.all([
+    PageView.countDocuments({ createdAt: { $gte: startOfToday } }),
+    PageView.distinct('visitorId', { createdAt: { $gte: startOfToday } }),
+    PageView.countDocuments({ createdAt: { $gte: sevenDaysAgo } }),
+    PageView.distinct('visitorId', { createdAt: { $gte: sevenDaysAgo } }),
+    PageView.countDocuments({ createdAt: { $gte: thirtyDaysAgo } }),
+    PageView.countDocuments({}),
+    PageView.distinct('visitorId'),
+    PageView.aggregate([
+      { $match: { createdAt: { $gte: thirtyDaysAgo } } },
+      { $group: { _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } }, count: { $sum: 1 } } }
+    ]),
+    PageView.aggregate([
+      { $match: { createdAt: { $gte: thirtyDaysAgo } } },
+      { $group: { _id: '$path', count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+      { $limit: 10 }
+    ]),
+    PageView.aggregate([
+      { $match: { createdAt: { $gte: thirtyDaysAgo } } },
+      { $group: { _id: '$referrer', count: { $sum: 1 } } }
+    ])
+  ]);
+
+  const dayMap = {};
+  dayAgg.forEach((d) => { dayMap[d._id] = d.count; });
+  const dailySeries = [];
+  for (let i = 29; i >= 0; i--) {
+    const d = new Date(now);
+    d.setDate(d.getDate() - i);
+    const key = d.toISOString().slice(0, 10);
+    dailySeries.push({ date: key, count: dayMap[key] || 0 });
+  }
+
+  const topPages = pageAgg.map((p) => ({ path: p._id || '/', count: p.count }));
+
+  const referrerCounts = {};
+  referrerAgg.forEach((r) => {
+    let label = 'Direct';
+    if (r._id) {
+      try {
+        const host = new URL(r._id).hostname.replace(/^www\./, '');
+        label = host && host === req.hostname ? 'Direct' : host || 'Direct';
+      } catch (e) {
+        label = 'Direct';
+      }
+    }
+    referrerCounts[label] = (referrerCounts[label] || 0) + r.count;
+  });
+  const topReferrers = Object.entries(referrerCounts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 10)
+    .map(([name, count]) => ({ name, count }));
+
+  res.render('admin/visitors', {
+    title: 'Visitors',
+    stats: {
+      viewsToday,
+      uniqueToday: uniqueTodayIds.length,
+      views7,
+      unique7: unique7Ids.length,
+      views30,
+      allTimeViews,
+      allTimeVisitors: allTimeVisitorIds.length
+    },
+    dailySeries,
+    topPages,
+    topReferrers
+  });
 }));
 
 module.exports = router;

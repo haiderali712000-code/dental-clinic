@@ -12,8 +12,45 @@ const Gallery = require('../models/Gallery');
 const Review = require('../models/Review');
 const upload = require('../utils/upload');
 const Ad = require('../models/Ad');
+const PageView = require('../models/PageView');
+const crypto = require('crypto');
 
 const getCanonical = (req) => `${req.protocol}://${req.get('host')}${req.path === '/' ? '/' : req.path}`;
+
+// Lightweight, dependency-free visitor tracking for the admin "Visitors" page.
+// Reads/sets a long-lived visitor id cookie by hand (no cookie-parser needed)
+// and logs one PageView per GET request so we can report views/uniques/top
+// pages/top referrers without any external analytics service.
+function getCookieValue(req, name) {
+  const header = req.headers.cookie;
+  if (!header) return null;
+  const parts = header.split(';');
+  for (const part of parts) {
+    const idx = part.indexOf('=');
+    if (idx === -1) continue;
+    const key = part.slice(0, idx).trim();
+    if (key === name) return decodeURIComponent(part.slice(idx + 1).trim());
+  }
+  return null;
+}
+
+router.use((req, res, next) => {
+  if (req.method !== 'GET') return next();
+
+  let visitorId = getCookieValue(req, 'hiks_vid');
+  if (!visitorId) {
+    visitorId = crypto.randomUUID();
+    res.append('Set-Cookie', `hiks_vid=${visitorId}; Max-Age=${60 * 60 * 24 * 365}; Path=/; HttpOnly; SameSite=Lax`);
+  }
+
+  PageView.create({
+    path: req.path,
+    referrer: req.get('Referrer') || req.get('Referer') || '',
+    visitorId
+  }).catch(() => {});
+
+  next();
+});
 
 router.get('/', asyncHandler(async (req, res) => {
   const doctors = await Doctor.find({ active: true }).sort({ createdAt: 1 });

@@ -1,0 +1,146 @@
+<%- include('../partials/admin-header') %>
+
+<style>
+  .visitors-stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 14px;
+    margin-bottom: 32px;
+  }
+  .visitors-stat-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 18px 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+  }
+  .visitors-stat-card strong {
+    display: block;
+    font-size: 28px;
+    color: #0f5c4c;
+    line-height: 1.1;
+    margin-bottom: 6px;
+  }
+  .visitors-stat-card span {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    color: #8a7660;
+    text-transform: uppercase;
+  }
+  .visitors-chart-wrap {
+    background: #fff;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+    margin-bottom: 32px;
+  }
+  .visitors-chart-title {
+    font-weight: 700;
+    margin: 0 0 16px;
+  }
+  .visitors-bar-chart {
+    display: flex;
+    align-items: flex-end;
+    gap: 4px;
+    height: 160px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 2px;
+  }
+  .visitors-bar {
+    flex: 1;
+    background: #0f5c4c;
+    border-radius: 3px 3px 0 0;
+    min-height: 3px;
+  }
+  .visitors-two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+  @media (max-width: 700px) {
+    .visitors-two-col { grid-template-columns: 1fr; }
+  }
+  .visitors-list-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+  }
+  .visitors-list-title {
+    font-weight: 700;
+    margin: 0 0 14px;
+  }
+  .visitors-list-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid #f2f2f2;
+    font-size: 14px;
+  }
+  .visitors-list-row:last-child { border-bottom: none; }
+  .visitors-list-row span:first-child {
+    color: #333;
+    word-break: break-all;
+  }
+  .visitors-list-row span:last-child {
+    color: #0f5c4c;
+    font-weight: 700;
+    white-space: nowrap;
+    margin-left: 12px;
+  }
+  .visitors-empty { color: #999; font-size: 14px; }
+</style>
+
+<div class="page-header">
+  <div>
+    <h1>Visitors</h1>
+    <p class="muted">Website traffic based on page views logged on the public site.</p>
+  </div>
+</div>
+
+<div class="visitors-stat-grid">
+  <div class="visitors-stat-card"><strong><%= stats.viewsToday %></strong><span>Views Today</span></div>
+  <div class="visitors-stat-card"><strong><%= stats.uniqueToday %></strong><span>Unique Today</span></div>
+  <div class="visitors-stat-card"><strong><%= stats.views7 %></strong><span>Views (7 Days)</span></div>
+  <div class="visitors-stat-card"><strong><%= stats.unique7 %></strong><span>Unique (7 Days)</span></div>
+  <div class="visitors-stat-card"><strong><%= stats.views30 %></strong><span>Views (30 Days)</span></div>
+  <div class="visitors-stat-card"><strong><%= stats.allTimeViews %></strong><span>All-Time Views</span></div>
+  <div class="visitors-stat-card"><strong><%= stats.allTimeVisitors %></strong><span>All-Time Visitors</span></div>
+</div>
+
+<div class="visitors-chart-wrap">
+  <p class="visitors-chart-title">Views over the last 30 days</p>
+  <%
+    const maxCount = Math.max(1, ...dailySeries.map(d => d.count));
+  %>
+  <div class="visitors-bar-chart">
+    <% dailySeries.forEach(function(d) { %>
+      <div class="visitors-bar" style="height: <%= Math.round((d.count / maxCount) * 100) %>%" title="<%= d.date %>: <%= d.count %> views"></div>
+    <% }) %>
+  </div>
+</div>
+
+<div class="visitors-two-col">
+  <div class="visitors-list-card">
+    <p class="visitors-list-title">Top pages (30 days)</p>
+    <% if (!topPages.length) { %>
+      <p class="visitors-empty">No page views yet.</p>
+    <% } else { %>
+      <% topPages.forEach(function(p) { %>
+        <div class="visitors-list-row"><span><%= p.path %></span><span><%= p.count %></span></div>
+      <% }) %>
+    <% } %>
+  </div>
+  <div class="visitors-list-card">
+    <p class="visitors-list-title">Top referrers (30 days)</p>
+    <% if (!topReferrers.length) { %>
+      <p class="visitors-empty">No referrer data yet.</p>
+    <% } else { %>
+      <% topReferrers.forEach(function(r) { %>
+        <div class="visitors-list-row"><span><%= r.name %></span><span><%= r.count %></span></div>
+      <% }) %>
+    <% } %>
+  </div>
+</div>
+
+<%- include('../partials/admin-footer') %>
