@@ -10,6 +10,7 @@ const getServices = require('../utils/getServices');
 const { sendNewAppointmentEmail } = require('../utils/mailer');
 const Gallery = require('../models/Gallery');
 const Review = require('../models/Review');
+const upload = require('../utils/upload');
 
 const getCanonical = (req) => `${req.protocol}://${req.get('host')}${req.path === '/' ? '/' : req.path}`;
 
@@ -47,7 +48,7 @@ router.get('/reviews', asyncHandler(async (req, res) => {
   res.render('reviews-list', { title: 'Patient Reviews', reviews, canonicalUrl: getCanonical(req) });
 }));
 
-router.post('/reviews', asyncHandler(async (req, res) => {
+router.post('/reviews', upload.none(), asyncHandler(async (req, res) => {
   const customerName = (req.body.customerName || '').trim();
   const rating = Number(req.body.rating);
   const reviewText = (req.body.reviewText || '').trim();
