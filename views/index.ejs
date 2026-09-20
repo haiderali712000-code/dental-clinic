@@ -52,7 +52,13 @@
     <div class="service-reference-grid">
       <% services.forEach(function(s) { %>
         <a href="/services/<%= s._id %>" class="service-reference-card">
-          <div class="service-icon"><span><%= s.icon %></span></div>
+          <div class="service-icon">
+            <% if (s.photoUrl) { %>
+              <img src="<%= s.photoUrl %>" alt="<%= s.name %>" class="service-icon-photo" />
+            <% } else { %>
+              <span><%= s.icon %></span>
+            <% } %>
+          </div>
           <h3><%= s.name %></h3>
         </a>
       <% }) %>
