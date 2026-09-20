@@ -44,47 +44,109 @@
 </section>
 
 <% if (ads && ads.length) { %>
-<section class="ad-slider-section">
+<section class="ad-carousel-section">
   <style>
-    .ad-slider-section {
-      overflow: hidden;
+    .ad-carousel-section {
       padding: 24px 0;
       background: #fff;
     }
-    .ad-slider-track {
-      display: flex;
-      width: max-content;
-      animation: ad-slider-scroll <%= Math.max(ads.length * 6, 20) %>s linear infinite;
-    }
-    .ad-slider-track:hover {
-      animation-play-state: paused;
-    }
-    .ad-slide {
-      flex: 0 0 auto;
-      margin: 0 12px;
-      height: 160px;
-      border-radius: 12px;
+    .ad-carousel {
+      position: relative;
       overflow: hidden;
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+      width: 100%;
+      max-width: 1100px;
+      margin: 0 auto;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
     }
-    .ad-slide img {
+    .ad-carousel-track {
+      display: flex;
+      transition: transform 0.7s ease;
+    }
+    .ad-carousel-slide {
+      flex: 0 0 100%;
+      height: 320px;
+    }
+    .ad-carousel-slide img {
+      width: 100%;
       height: 100%;
-      width: auto;
       display: block;
       object-fit: cover;
     }
-    @keyframes ad-slider-scroll {
-      from { transform: translateX(0); }
-      to { transform: translateX(-50%); }
+    .ad-carousel-dots {
+      position: absolute;
+      bottom: 14px;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+    }
+    .ad-carousel-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.55);
+      border: none;
+      padding: 0;
+      cursor: pointer;
+    }
+    .ad-carousel-dot.active {
+      background: #fff;
+    }
+    @media (max-width: 640px) {
+      .ad-carousel-slide { height: 200px; }
     }
   </style>
-  <div class="ad-slider-track">
-    <% [...ads, ...ads].forEach(function(ad) { %>
-      <div class="ad-slide">
-        <img src="<%= ad.imageUrl %>" alt="<%= ad.title || 'Offer' %>" />
+  <div class="ad-carousel" id="adCarousel">
+    <div class="ad-carousel-track" id="adCarouselTrack">
+      <% ads.forEach(function(ad) { %>
+        <div class="ad-carousel-slide">
+          <img src="<%= ad.imageUrl %>" alt="<%= ad.title || 'Offer' %>" />
+        </div>
+      <% }) %>
+    </div>
+    <% if (ads.length > 1) { %>
+      <div class="ad-carousel-dots" id="adCarouselDots">
+        <% ads.forEach(function(ad, i) { %>
+          <button type="button" class="ad-carousel-dot<%= i === 0 ? ' active' : '' %>" data-index="<%= i %>" aria-label="Go to slide <%= i + 1 %>"></button>
+        <% }) %>
       </div>
-    <% }) %>
+    <% } %>
   </div>
+  <% if (ads.length > 1) { %>
+    <script>
+      (function () {
+        var track = document.getElementById('adCarouselTrack');
+        var dots = document.querySelectorAll('#adCarouselDots .ad-carousel-dot');
+        var total = <%= ads.length %>;
+        var index = 0;
+        var timer;
+
+        function goTo(i) {
+          index = (i + total) % total;
+          track.style.transform = 'translateX(-' + (index * 100) + '%)';
+          dots.forEach(function (d, di) { d.classList.toggle('active', di === index); });
+        }
+
+        function next() { goTo(index + 1); }
+
+        function startAutoplay() {
+          clearInterval(timer);
+          timer = setInterval(next, 4000);
+        }
+
+        dots.forEach(function (dot) {
+          dot.addEventListener('click', function () {
+            goTo(parseInt(dot.getAttribute('data-index'), 10));
+            startAutoplay();
+          });
+        });
+
+        startAutoplay();
+      })();
+    </script>
+  <% } %>
 </section>
 <% } %>
 
