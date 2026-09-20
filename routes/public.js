@@ -22,8 +22,8 @@ router.get('/', asyncHandler(async (req, res) => {
     Gallery.find({ category: 'Clinic', active: true }).sort({ createdAt: -1 })
   ]);
   const services = await getServices();
-  const reviews = await Review.find({}).sort({ createdAt: -1 });
-  res.render('index', { title: 'Home', doctors, ceo, teamMembers, services, treatmentResults, clinicGallery, reviews, canonicalUrl: getCanonical(req) });
+  const reviews = await Review.find({ approved: true }).sort({ createdAt: -1 });
+  res.render('index', { title: 'Home', doctors, ceo, teamMembers, services, treatmentResults, clinicGallery, reviews, reviewSubmitted: req.query.reviewSubmitted === '1', reviewError: req.query.reviewError === '1', canonicalUrl: getCanonical(req) });
 }));
 
 router.get('/doctors', asyncHandler(async (req, res) => {
@@ -40,6 +40,36 @@ router.get('/services/:id', asyncHandler(async (req, res) => {
   }
 
   res.render('service-detail', { title: service.name, service, canonicalUrl: getCanonical(req) });
+}));
+
+router.post('/reviews', asyncHandler(async (req, res) => {
+  const customerName = (req.body.customerName || '').trim();
+  const rating = Number(req.body.rating);
+  const reviewText = (req.body.reviewText || '').trim();
+  // Honeypot field: real visitors never fill this hidden input, bots often do.
+  const honeypot = (req.body.website || '').trim();
+
+  const wantsJson =
+    req.xhr ||
+    req.get('X-Requested-With') === 'XMLHttpRequest' ||
+    (req.get('Accept') || '').includes('application/json');
+
+  if (honeypot) {
+    // Silently pretend success to the bot without actually saving anything.
+    if (wantsJson) return res.json({ success: true });
+    return res.redirect('/#testimonials');
+  }
+
+  if (!customerName || !reviewText || !Number.isFinite(rating) || rating < 1 || rating > 5) {
+    const message = 'Please fill in your name, a rating, and your review.';
+    if (wantsJson) return res.status(400).json({ success: false, error: message });
+    return res.redirect('/?reviewError=1#testimonials');
+  }
+
+  await Review.create({ customerName, rating, reviewText, approved: false });
+
+  if (wantsJson) return res.json({ success: true });
+  res.redirect('/?reviewSubmitted=1#testimonials');
 }));
 
 router.get('/team', asyncHandler(async (req, res) => {

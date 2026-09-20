@@ -221,6 +221,48 @@
     <% } else { %>
       <div class="testimonial-card"><div class="quote-mark">“</div><div><p>Patient reviews can be displayed here once verified reviews are provided by the clinic.</p><span class="review-note">Only genuine patient feedback should be published.</span></div></div>
     <% } %>
+
+    <div class="review-form-card">
+      <h3>Share Your Experience</h3>
+      <p class="muted">Your review will appear here once our team reviews it.</p>
+
+      <% if (reviewSubmitted) { %>
+        <div class="alert alert-success">Thank you! Your review has been submitted and will appear here once approved.</div>
+      <% } %>
+      <% if (reviewError) { %>
+        <div class="alert alert-error">Please fill in your name, a rating, and your review.</div>
+      <% } %>
+
+      <form action="/reviews" method="POST" class="review-submit-form">
+        <label>
+          Your Name
+          <input type="text" name="customerName" required maxlength="80" placeholder="e.g. Ayesha Khan" />
+        </label>
+
+        <label>
+          Rating
+          <select name="rating" required>
+            <option value="5" selected>★★★★★ Excellent</option>
+            <option value="4">★★★★ Good</option>
+            <option value="3">★★★ Average</option>
+            <option value="2">★★ Poor</option>
+            <option value="1">★ Very Poor</option>
+          </select>
+        </label>
+
+        <label>
+          Your Review
+          <textarea name="reviewText" required maxlength="600" rows="4" placeholder="Tell us about your visit..."></textarea>
+        </label>
+
+        <!-- Honeypot: hidden from real visitors, only bots tend to fill this in -->
+        <div style="position:absolute;left:-9999px;" aria-hidden="true">
+          <label>Website<input type="text" name="website" tabindex="-1" autocomplete="off" /></label>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Submit Review</button>
+      </form>
+    </div>
   </div>
 </section>
 
