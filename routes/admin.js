@@ -585,7 +585,7 @@ router.get('/reviews', asyncHandler(async (req, res) => {
   res.render('admin/reviews', { title: 'Customer Reviews', reviews, error: null });
 }));
 
-router.post('/reviews', asyncHandler(async (req, res) => {
+router.post('/reviews', upload.none(), asyncHandler(async (req, res) => {
   try {
     const customerName = (req.body.customerName || '').trim();
     const rating = Number(req.body.rating);
@@ -604,7 +604,7 @@ router.post('/reviews', asyncHandler(async (req, res) => {
   }
 }));
 
-router.post('/reviews/:id', asyncHandler(async (req, res) => {
+router.post('/reviews/:id', upload.none(), asyncHandler(async (req, res) => {
   try {
     const customerName = (req.body.customerName || '').trim();
     const rating = Number(req.body.rating);
