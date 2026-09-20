@@ -688,7 +688,7 @@ router.post('/appointments/:id/status', asyncHandler(async (req, res) => {
 
   if (!allowed.includes(status)) {
     if (wantsJson(req)) return res.status(400).json({ success: false, error: 'Invalid status.' });
-    return res.redirect('back');
+    return res.redirect('/admin/appointments');
   }
 
   try {
@@ -700,22 +700,30 @@ router.post('/appointments/:id/status', asyncHandler(async (req, res) => {
 
     if (!appointment) {
       if (wantsJson(req)) return res.status(404).json({ success: false, error: 'Appointment not found.' });
-      return res.redirect('back');
+      return res.redirect('/admin/appointments');
     }
 
     if (wantsJson(req)) {
       return res.json({ success: true, status: appointment.status, token: appointment.token });
     }
-    return res.redirect('back');
+    return res.redirect('/admin/appointments');
   } catch (err) {
     if (wantsJson(req)) return res.status(500).json({ success: false, error: 'Could not update status.' });
-    return res.redirect('back');
+   return res.redirect('/admin/appointments');
   }
 }));
 
 router.post('/appointments/:id/delete', asyncHandler(async (req, res) => {
-  await Appointment.findByIdAndDelete(req.params.id);
-  res.redirect('back');
+  const appointment = await Appointment.findByIdAndDelete(req.params.id);
+
+  if (wantsJson(req)) {
+    if (!appointment) return res.status(404).json({ success: false, error: 'Appointment not found.' });
+    return res.json({ success: true, token: appointment.token });
+  }
+
+  const statusFilter = req.body.statusFilter || req.query.status;
+  const qs = statusFilter ? `?status=${encodeURIComponent(statusFilter)}&deleted=1` : '?deleted=1';
+  res.redirect(`/admin/appointments${qs}`);
 }));
 
 /* ---------------- VISITORS / ANALYTICS ---------------- */
