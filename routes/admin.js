@@ -593,7 +593,7 @@ router.post('/reviews', asyncHandler(async (req, res) => {
     if (!customerName) throw new Error('Please enter the customer name.');
     if (!Number.isFinite(rating) || rating < 1 || rating > 5) throw new Error('Please select a valid rating.');
     if (!reviewText) throw new Error('Please enter the review text.');
-    await Review.create({ customerName, rating, reviewText, approved: true });
+    await Review.create({ customerName, rating, reviewText });
     if (wantsJson(req)) return res.json({ success: true });
     res.redirect('/admin/reviews');
   } catch (err) {
@@ -620,23 +620,6 @@ router.post('/reviews/:id', asyncHandler(async (req, res) => {
     if (wantsJson(req)) return res.status(400).json({ success: false, error: message });
     const reviews = await Review.find({}).sort({ createdAt: -1 });
     res.status(400).render('admin/reviews', { title: 'Customer Reviews', reviews, error: message });
-  }
-}));
-
-router.post('/reviews/:id/approve', asyncHandler(async (req, res) => {
-  try {
-    const review = await Review.findById(req.params.id);
-    if (!review) {
-      if (wantsJson(req)) return res.status(404).json({ success: false, error: 'Review not found.' });
-      return res.redirect('/admin/reviews');
-    }
-    review.approved = !review.approved;
-    await review.save();
-    if (wantsJson(req)) return res.json({ success: true, approved: review.approved });
-    res.redirect('/admin/reviews');
-  } catch (err) {
-    if (wantsJson(req)) return res.status(500).json({ success: false, error: 'Could not update review.' });
-    res.redirect('/admin/reviews');
   }
 }));
 

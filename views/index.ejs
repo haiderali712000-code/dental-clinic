@@ -218,7 +218,9 @@
         </div>
       </div>
     <% } else { %>
-      <div class="testimonial-card"><div class="quote-mark">“</div><div><p>Patient reviews can be displayed here once verified reviews are provided by the clinic.</p><span class="review-note">Only genuine patient feedback should be published.</span></div></div>
+      <div class="testimonial-grid testimonial-grid-single">
+        <div class="testimonial-card"><div class="quote-mark">“</div><div><p>Patient reviews can be displayed here once verified reviews are provided by the clinic.</p><span class="review-note">Only genuine patient feedback should be published.</span></div></div>
+      </div>
     <% } %>
 
     <div class="testimonial-actions">
@@ -228,18 +230,13 @@
       <button type="button" class="btn btn-primary" id="openReviewFormBtn">+ Add a Review</button>
     </div>
 
-    <div class="review-form-card" id="reviewFormCard" <%= (reviewSubmitted || reviewError) ? '' : 'hidden' %>>
+    <div class="review-form-card" id="reviewFormCard" hidden>
       <h3>Share Your Experience</h3>
-      <p class="muted">Your review will appear here once our team reviews it.</p>
+      <p class="muted">Your review will be posted right away.</p>
 
-      <% if (reviewSubmitted) { %>
-        <div class="alert alert-success">Thank you! Your review has been submitted and will appear here once approved.</div>
-      <% } %>
-      <% if (reviewError) { %>
-        <div class="alert alert-error">Please fill in your name, a rating, and your review.</div>
-      <% } %>
+      <div id="reviewFormError"></div>
 
-      <form action="/reviews" method="POST" class="review-submit-form">
+      <form action="/reviews" method="POST" class="review-submit-form" id="reviewSubmitForm">
         <label>
           Your Name
           <input type="text" name="customerName" required maxlength="80" placeholder="e.g. Ayesha Khan" />
@@ -274,12 +271,93 @@
 
 <script>
   (function () {
-    var btn = document.getElementById('openReviewFormBtn');
+    var toggleBtn = document.getElementById('openReviewFormBtn');
     var card = document.getElementById('reviewFormCard');
-    if (!btn || !card) return;
-    btn.addEventListener('click', function () {
-      card.hidden = !card.hidden;
-      if (!card.hidden) card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    if (toggleBtn && card) {
+      toggleBtn.addEventListener('click', function () {
+        card.hidden = !card.hidden;
+        if (!card.hidden) card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      });
+    }
+
+    function showSiteToast(message, isError) {
+      var toast = document.createElement('div');
+      toast.className = 'site-toast' + (isError ? ' site-toast-error' : '');
+      toast.textContent = message;
+      document.body.appendChild(toast);
+      requestAnimationFrame(function () {
+        requestAnimationFrame(function () { toast.classList.add('show'); });
+      });
+      setTimeout(function () {
+        toast.classList.remove('show');
+        setTimeout(function () { toast.remove(); }, 300);
+      }, 2400);
+    }
+
+    var form = document.getElementById('reviewSubmitForm');
+    if (!form) return;
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+
+      var btn = form.querySelector('button[type="submit"]');
+      var errorBox = document.getElementById('reviewFormError');
+      errorBox.innerHTML = '';
+      btn.disabled = true;
+      btn.textContent = 'Submitting...';
+
+      fetch('/reviews', {
+        method: 'POST',
+        body: new FormData(form),
+        headers: { 'X-Requested-With': 'XMLHttpRequest', Accept: 'application/json' }
+      })
+        .then(function (response) {
+          return response.json().catch(function () { return null; }).then(function (data) {
+            return { ok: response.ok, data: data };
+          });
+        })
+        .then(function (result) {
+          btn.disabled = false;
+          btn.textContent = 'Submit Review';
+
+          if (!result.ok || !result.data || !result.data.success) {
+            throw new Error((result.data && result.data.error) || 'Something went wrong. Please try again.');
+          }
+
+          showSiteToast('Review added!');
+          form.reset();
+          card.hidden = true;
+
+          // Reflect the new review immediately as the featured one, no reload needed.
+          var review = result.data.review;
+          if (review) {
+            var grid = document.querySelector('.testimonial-grid-single, .testimonial-grid');
+            if (grid) {
+              var stars = '';
+              for (var i = 1; i <= 5; i++) stars += '<span class="' + (i <= review.rating ? 'star-filled' : 'star-empty') + '">★</span>';
+              grid.innerHTML =
+                '<div class="testimonial-card"><div class="quote-mark">\u201c</div><div>' +
+                '<div class="review-stars">' + stars + '</div>' +
+                '<p></p><span class="review-note review-author">— </span></div></div>';
+              grid.querySelector('p').textContent = review.reviewText;
+              grid.querySelector('.review-author').append(review.customerName);
+            }
+            var viewAllLink = document.querySelector('.testimonial-actions a[href="/reviews"]');
+            if (!viewAllLink) {
+              var actions = document.querySelector('.testimonial-actions');
+              var a = document.createElement('a');
+              a.href = '/reviews';
+              a.className = 'btn btn-outline';
+              a.textContent = 'View All Reviews →';
+              actions.insertBefore(a, actions.firstChild);
+            }
+          }
+        })
+        .catch(function (err) {
+          errorBox.innerHTML = '<div class="alert alert-error">' + (err.message || 'Something went wrong. Please try again.') + '</div>';
+          btn.disabled = false;
+          btn.textContent = 'Submit Review';
+        });
     });
   })();
 </script>

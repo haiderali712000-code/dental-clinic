@@ -28,13 +28,13 @@
 </div>
 
 <h2 class="admin-section-title">All Reviews</h2>
-<p class="muted">Reviews visitors submit on the website start out <strong>Pending</strong> and only appear on the homepage after you approve them. Reviews you add here yourself are published immediately.</p>
+<p class="muted">Reviews submitted on the website and reviews you add here both publish immediately. Remove any you don't want shown using Delete.</p>
 <% if (reviews.length === 0) { %>
   <div class="card empty-card">No reviews added yet. Reviews you add here will appear in the "What Our Customers Say" section on the homepage.</div>
 <% } else { %>
   <div class="review-admin-list">
     <% reviews.forEach(function(review) { %>
-      <div class="review-admin-row" data-review-row="<%= review._id %>">
+      <div class="review-admin-row">
         <form action="/admin/reviews/<%= review._id %>" method="POST" class="review-edit-form ajax-form" data-success-message="Review updated!" data-redirect="/admin/reviews">
           <input type="text" name="customerName" value="<%= review.customerName %>" required aria-label="Customer name">
           <select name="rating" aria-label="Rating">
@@ -47,64 +47,12 @@
           <textarea name="reviewText" rows="2" required aria-label="Review text"><%= review.reviewText %></textarea>
           <button type="submit" class="btn btn-primary">Save</button>
         </form>
-        <div class="review-actions">
-          <% if (review.approved) { %>
-            <span class="badge badge-confirmed">Published</span>
-          <% } else { %>
-            <span class="badge badge-pending">Pending</span>
-          <% } %>
-          <form action="/admin/reviews/<%= review._id %>/approve" method="POST" class="review-approve-form">
-            <button type="submit" class="btn btn-sm <%= review.approved ? 'btn-outline' : 'btn-primary' %>"><%= review.approved ? 'Unpublish' : 'Approve' %></button>
-          </form>
-          <form action="/admin/reviews/<%= review._id %>/delete" method="POST" onsubmit="return confirm('Delete this review?');">
-            <button type="submit" class="btn btn-danger">Delete</button>
-          </form>
-        </div>
+        <form action="/admin/reviews/<%= review._id %>/delete" method="POST" onsubmit="return confirm('Delete this review?');">
+          <button type="submit" class="btn btn-danger">Delete</button>
+        </form>
       </div>
     <% }) %>
   </div>
 <% } %>
-
-<script>
-  document.querySelectorAll('.review-approve-form').forEach(function (form) {
-    form.addEventListener('submit', async function (e) {
-      e.preventDefault();
-      const btn = form.querySelector('button');
-      const originalText = btn.textContent;
-      btn.disabled = true;
-      btn.textContent = '...';
-
-      try {
-        const response = await fetch(form.action, {
-          method: 'POST',
-          headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
-        });
-        const data = await response.json().catch(function () { return null; });
-        if (!response.ok || !data || !data.success) throw new Error();
-
-        const badge = form.closest('.review-actions').querySelector('.badge');
-        if (data.approved) {
-          badge.textContent = 'Published';
-          badge.className = 'badge badge-confirmed';
-          btn.textContent = 'Unpublish';
-          btn.classList.remove('btn-primary');
-          btn.classList.add('btn-outline');
-        } else {
-          badge.textContent = 'Pending';
-          badge.className = 'badge badge-pending';
-          btn.textContent = 'Approve';
-          btn.classList.remove('btn-outline');
-          btn.classList.add('btn-primary');
-        }
-        if (window.showAdminToast) window.showAdminToast(data.approved ? 'Review published!' : 'Review unpublished.');
-        btn.disabled = false;
-      } catch (err) {
-        alert('Could not update this review. Please try again.');
-        btn.disabled = false;
-        btn.textContent = originalText;
-      }
-    });
-  });
-</script>
 
 <%- include('../partials/admin-footer') %>
