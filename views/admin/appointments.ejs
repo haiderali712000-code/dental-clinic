@@ -52,6 +52,8 @@
 
             <form action="/admin/appointments/<%= a._id %>/delete"
                   method="POST"
+                  class="appointment-delete-form"
+                  data-token="<%= a.token %>"
                   onsubmit="return confirm('Delete this appointment?');">
               <button type="submit" class="btn btn-sm btn-danger">Delete</button>
             </form>
@@ -101,6 +103,15 @@
   close.addEventListener('click', hidePopup);
   popup.addEventListener('click', e => { if (e.target === popup) hidePopup(); });
 
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('deleted') === '1') {
+    showPopup('Appointment Deleted', 'The appointment has been deleted.');
+    params.delete('deleted');
+    const cleanQs = params.toString();
+    const cleanUrl = window.location.pathname + (cleanQs ? '?' + cleanQs : '');
+    window.history.replaceState({}, '', cleanUrl);
+  }
+
   forms.forEach(form => {
     const select = form.querySelector('.appointment-status-select');
     let previous = select.value;
@@ -146,6 +157,44 @@
           'The appointment status could not be updated. Please try again.');
       } finally {
         select.disabled = false;
+      }
+    });
+  });
+
+  const deleteForms = document.querySelectorAll('.appointment-delete-form');
+  deleteForms.forEach(form => {
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!confirm('Delete this appointment?')) return;
+
+      const button = form.querySelector('button');
+      try {
+        button.disabled = true;
+        const response = await fetch(form.action, {
+          method: 'POST',
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json'
+          }
+        });
+
+        let data = null;
+        try { data = await response.json(); } catch (_) { /* not JSON */ }
+
+        if (!response.ok || !data || !data.success) {
+          throw new Error((data && data.error) || 'Request failed');
+        }
+
+        const row = form.closest('tr');
+        if (row) row.remove();
+
+        showPopup('Appointment Deleted',
+          'Appointment ' + form.dataset.token + ' has been deleted.');
+      } catch (err) {
+        showPopup('Delete Failed',
+          'The appointment could not be deleted. Please try again.');
+      } finally {
+        button.disabled = false;
       }
     });
   });
