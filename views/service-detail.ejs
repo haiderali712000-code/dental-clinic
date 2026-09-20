@@ -1,0 +1,46 @@
+<%- include('partials/header') %>
+
+<section class="page-hero-simple">
+  <div class="container">
+    <span class="section-kicker">✚ OUR SERVICES</span>
+    <h1><%= service.name %></h1>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container" style="max-width:720px;">
+    <div class="card" style="padding:32px 28px;">
+      <% if (service.photoUrl) { %>
+        <img
+          src="<%= service.photoUrl %>"
+          alt="<%= service.name %>"
+          style="width:100%;max-height:360px;object-fit:cover;border-radius:12px;margin-bottom:22px;"
+        />
+      <% } else { %>
+        <div class="service-icon" style="width:64px;height:64px;font-size:32px;display:flex;align-items:center;justify-content:center;margin-bottom:18px;">
+          <span><%= service.icon %></span>
+        </div>
+      <% } %>
+
+      <h2 style="margin-top:0;"><%= service.name %></h2>
+      <p class="doctor-qualification">Rs. <%= Number(service.price || 0).toLocaleString('en-PK') %></p>
+
+      <% if (service.description) { %>
+        <p><%= service.description %></p>
+      <% } else { %>
+        <p class="muted">More details coming soon for this service.</p>
+      <% } %>
+
+      <% if (service.videoUrl) { %>
+        <p><a href="<%= service.videoUrl %>" target="_blank" rel="noopener" class="service-video-link">▶ View Video</a></p>
+      <% } %>
+
+      <div class="form-actions" style="margin-top:24px;">
+        <a href="/book" class="btn btn-primary">Book This Service →</a>
+        <a href="/#services" class="btn btn-outline">← Back to All Services</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<%- include('partials/footer') %>

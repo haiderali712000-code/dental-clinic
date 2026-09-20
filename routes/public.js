@@ -31,6 +31,17 @@ router.get('/doctors', asyncHandler(async (req, res) => {
   res.render('doctors', { title: 'Our Doctors', doctors, canonicalUrl: getCanonical(req) });
 }));
 
+router.get('/services/:id', asyncHandler(async (req, res) => {
+  const services = await getServices();
+  const service = services.find((s) => String(s._id) === req.params.id);
+
+  if (!service) {
+    return res.status(404).render('404', { title: 'Service Not Found' });
+  }
+
+  res.render('service-detail', { title: service.name, service, canonicalUrl: getCanonical(req) });
+}));
+
 router.get('/team', asyncHandler(async (req, res) => {
   const teamMembers = await TeamMember.find({ active: true }).sort({ createdAt: 1 });
   res.render('team', { title: 'Our Team', teamMembers, canonicalUrl: getCanonical(req) });

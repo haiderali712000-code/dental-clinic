@@ -107,6 +107,21 @@ router.post('/doctors', upload.single('photo'), asyncHandler(async (req, res) =>
       throw new Error('Name and specialty are required.');
     }
 
+    // Guard against duplicate creates if this request gets resent/retried
+    // (slow connection, a proxy retry, an accidental double submit, etc.):
+    // if the exact same doctor was already added moments ago, treat this
+    // as the same request instead of adding it again.
+    const recentDuplicate = await Doctor.findOne({
+      name: name.trim(),
+      specialty: specialty.trim(),
+      createdAt: { $gte: new Date(Date.now() - 15000) }
+    }).sort({ createdAt: -1 });
+
+    if (recentDuplicate) {
+      if (wantsJson(req)) return res.json({ success: true });
+      return res.redirect('/admin/doctors');
+    }
+
     let photoUrl = '';
 
     if (req.file) {
@@ -270,6 +285,18 @@ router.post('/team', upload.single('photo'), asyncHandler(async (req, res) => {
 
     if (!name || !title) {
       throw new Error('Name and title are required.');
+    }
+
+    // Same duplicate-submission guard as Doctors — see the comment there.
+    const recentDuplicate = await TeamMember.findOne({
+      name: name.trim(),
+      title: title.trim(),
+      createdAt: { $gte: new Date(Date.now() - 15000) }
+    }).sort({ createdAt: -1 });
+
+    if (recentDuplicate) {
+      if (wantsJson(req)) return res.json({ success: true });
+      return res.redirect('/admin/team');
     }
 
     let photoUrl = '';
@@ -457,57 +484,98 @@ router.post('/gallery/:id/delete', asyncHandler(async (req, res) => {
 
 router.get('/services', asyncHandler(async (req, res) => {
   const services = await Service.find({ isAdminAdded: true }).sort({ createdAt: 1 });
-  res.render('admin/services', { title: 'Manage Services', services, error: null });
+  res.render('admin/services', { title: 'Manage Services', services });
 }));
 
-router.post('/services', asyncHandler(async (req, res) => {
+router.get('/services/new', (req, res) => {
+  res.render('admin/service-form', { title: 'Add Service', service: null, error: null });
+});
+
+router.post('/services', upload.single('photo'), asyncHandler(async (req, res) => {
   try {
     const name = (req.body.name || '').trim();
     const price = Number(req.body.price);
+    const description = (req.body.description || '').trim();
     const videoUrl = (req.body.videoUrl || '').trim();
     if (!name) throw new Error('Please enter a service name.');
     if (!Number.isFinite(price) || price < 0) throw new Error('Please enter a valid price.');
+
+    let photoUrl = '';
+    if (req.file) {
+      const uploaded = await uploadBuffer(req.file.buffer, 'hiks-dental/services');
+      photoUrl = uploaded.secure_url;
+    }
+
+    // A fixed default service (from config/services.js) becoming admin-managed
+    // for the first time reuses that existing document rather than creating
+    // a duplicate with the same name.
     const existingLegacy = await Service.findOne({ name, isAdminAdded: { $ne: true } });
     if (existingLegacy) {
       existingLegacy.price = price;
+      existingLegacy.description = description;
+      if (photoUrl) existingLegacy.photoUrl = photoUrl;
       existingLegacy.active = true;
       existingLegacy.isAdminAdded = true;
       existingLegacy.videoUrl = videoUrl;
       await existingLegacy.save();
     } else {
-      await Service.create({ name, price, active: true, isAdminAdded: true, videoUrl });
+      await Service.create({ name, price, description, photoUrl, active: true, isAdminAdded: true, videoUrl });
     }
+
     if (wantsJson(req)) return res.json({ success: true });
     res.redirect('/admin/services');
   } catch (err) {
     const message = err.code === 11000 ? 'A service with this name already exists.' : (err.message || 'Could not add service.');
     if (wantsJson(req)) return res.status(400).json({ success: false, error: message });
-    const services = await Service.find({ isAdminAdded: true }).sort({ createdAt: 1 });
-    res.status(400).render('admin/services', { title: 'Manage Services', services, error: message });
+    res.status(400).render('admin/service-form', { title: 'Add Service', service: req.body, error: message });
   }
 }));
 
-router.post('/services/:id', asyncHandler(async (req, res) => {
+router.get('/services/:id/edit', asyncHandler(async (req, res) => {
+  const service = await Service.findById(req.params.id);
+  if (!service) return res.redirect('/admin/services');
+  res.render('admin/service-form', { title: 'Edit Service', service, error: null });
+}));
+
+router.post('/services/:id', upload.single('photo'), asyncHandler(async (req, res) => {
   try {
     const name = (req.body.name || '').trim();
     const price = Number(req.body.price);
+    const description = (req.body.description || '').trim();
     const videoUrl = (req.body.videoUrl || '').trim();
     if (!name) throw new Error('Please enter a service name.');
     if (!Number.isFinite(price) || price < 0) throw new Error('Please enter a valid price.');
-    await Service.findByIdAndUpdate(req.params.id, { name, price, videoUrl }, { runValidators: true });
+
+    const updateData = { name, price, description, videoUrl };
+
+    if (req.file) {
+      const uploaded = await uploadBuffer(req.file.buffer, 'hiks-dental/services');
+      updateData.photoUrl = uploaded.secure_url;
+    }
+
+    await Service.findByIdAndUpdate(req.params.id, updateData, { runValidators: true });
     if (wantsJson(req)) return res.json({ success: true });
     res.redirect('/admin/services');
   } catch (err) {
     const message = err.code === 11000 ? 'A service with this name already exists.' : (err.message || 'Could not update service.');
     if (wantsJson(req)) return res.status(400).json({ success: false, error: message });
-    const services = await Service.find({ isAdminAdded: true }).sort({ createdAt: 1 });
-    res.status(400).render('admin/services', { title: 'Manage Services', services, error: message });
+    res.status(400).render('admin/service-form', {
+      title: 'Edit Service',
+      service: { ...req.body, _id: req.params.id, photoUrl: '' },
+      error: message
+    });
   }
 }));
 
 router.post('/services/:id/delete', asyncHandler(async (req, res) => {
-  await Service.findByIdAndDelete(req.params.id);
-  res.redirect('/admin/services');
+  try {
+    await Service.findByIdAndDelete(req.params.id);
+    if (wantsJson(req)) return res.json({ success: true });
+    res.redirect('/admin/services');
+  } catch (err) {
+    if (wantsJson(req)) return res.status(500).json({ success: false, error: 'Could not delete service.' });
+    res.redirect('/admin/services');
+  }
 }));
 
 /* ---------------- CUSTOMER REVIEWS ---------------- */

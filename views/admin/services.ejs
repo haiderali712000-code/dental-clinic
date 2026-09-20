@@ -3,41 +3,74 @@
 <div class="page-header">
   <div>
     <h1>Services</h1>
-    <p class="muted">Add the dental services customers can select when booking. Set only the service name and price.</p>
+    <p class="muted">Add the dental services customers can select when booking, with a description and photo shown on each service's own page.</p>
   </div>
+  <a href="/admin/services/new" class="btn btn-primary">+ Add Service</a>
 </div>
 
-<% if (error) { %><div class="alert alert-error"><%= error %></div><% } %>
-
-<div class="card" style="margin-bottom:20px;">
-  <h2 style="margin-top:0;">Add Service</h2>
-  <form action="/admin/services" method="POST" class="service-add-form ajax-form" data-success-message="Service added!" data-redirect="/admin/services" data-reset="true">
-    <label>Service Name<input type="text" name="name" required placeholder="e.g. Dental Filling"></label>
-    <label>Price (Rs.)<input type="number" name="price" min="0" step="1" required placeholder="5000"></label>
-    <label>Video URL (optional)<input type="url" name="videoUrl" placeholder="https://youtube.com/... or tiktok.com/..."></label>
-    <button type="submit" class="btn btn-primary">Add Service</button>
-  </form>
-</div>
-
-<h2 class="admin-section-title">Added Services</h2>
 <% if (services.length === 0) { %>
-  <div class="card empty-card">No services added yet.</div>
+  <p class="muted">No services added yet.</p>
 <% } else { %>
-  <div class="service-admin-list">
-    <% services.forEach(function(service) { %>
-      <div class="service-admin-row">
-        <form action="/admin/services/<%= service._id %>" method="POST" style="display:contents;" class="ajax-form" data-success-message="Service updated!" data-redirect="/admin/services">
-          <input type="text" name="name" value="<%= service.name %>" required aria-label="Service name">
-          <input type="number" name="price" value="<%= service.price %>" min="0" step="1" required aria-label="Service price">
-          <input type="url" name="videoUrl" value="<%= service.videoUrl || '' %>" placeholder="Video URL (optional)" aria-label="Service video URL">
-          <button type="submit" class="btn btn-primary">Save</button>
-        </form>
-        <form action="/admin/services/<%= service._id %>/delete" method="POST" onsubmit="return confirm('Delete this service? Existing appointments will keep their saved service and price.');">
-          <button type="submit" class="btn btn-danger">Delete</button>
-        </form>
-      </div>
-    <% }) %>
-  </div>
+  <table class="admin-table">
+    <thead>
+      <tr>
+        <th>Photo</th>
+        <th>Name</th>
+        <th>Price</th>
+        <th>Description</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% services.forEach(function(service) { %>
+        <tr data-service-row="<%= service._id %>">
+          <td><img class="thumb" src="<%= service.photoUrl || 'https://placehold.co/60x60?text=%F0%9F%A6%B7' %>" alt="" /></td>
+          <td><%= service.name %></td>
+          <td>Rs. <%= Number(service.price || 0).toLocaleString('en-PK') %></td>
+          <td class="muted" style="max-width:280px;"><%= service.description ? (service.description.length > 80 ? service.description.slice(0, 80) + '…' : service.description) : '—' %></td>
+          <td class="actions">
+            <a href="/admin/services/<%= service._id %>/edit" class="btn btn-sm btn-outline">Edit</a>
+            <form action="/admin/services/<%= service._id %>/delete" method="POST" class="service-delete-form">
+              <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+            </form>
+          </td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
 <% } %>
+
+<script>
+  document.querySelectorAll('.service-delete-form').forEach(function (form) {
+    form.addEventListener('submit', async function (e) {
+      e.preventDefault();
+      if (!confirm('Delete this service? Existing appointments will keep their saved service and price.')) return;
+
+      const btn = form.querySelector('button');
+      btn.disabled = true;
+      btn.textContent = 'Deleting...';
+
+      try {
+        const response = await fetch(form.action, {
+          method: 'POST',
+          headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+        });
+        let data = null;
+        try { data = await response.json(); } catch (_) { /* not JSON */ }
+
+        if (!response.ok || !data || !data.success) {
+          throw new Error((data && data.error) || 'Request failed');
+        }
+
+        form.closest('tr').remove();
+        if (window.showAdminToast) window.showAdminToast('Service deleted.');
+      } catch (err) {
+        alert('Could not delete this service. Please try again.');
+        btn.disabled = false;
+        btn.textContent = 'Delete';
+      }
+    });
+  });
+</script>
 
 <%- include('../partials/admin-footer') %>

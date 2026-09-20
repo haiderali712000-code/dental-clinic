@@ -51,14 +51,10 @@
     </div>
     <div class="service-reference-grid">
       <% services.forEach(function(s) { %>
-        <article class="service-reference-card">
+        <a href="/services/<%= s._id %>" class="service-reference-card">
           <div class="service-icon"><span><%= s.icon %></span></div>
           <h3><%= s.name %></h3>
-          <p><%= s.description %></p>
-          <% if (s.videoUrl) { %>
-            <a href="<%= s.videoUrl %>" target="_blank" rel="noopener" class="service-video-link">▶ View Video</a>
-          <% } %>
-        </article>
+        </a>
       <% }) %>
     </div>
   </div>
