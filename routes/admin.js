@@ -9,6 +9,7 @@ const Appointment = require('../models/Appointment');
 const Gallery = require('../models/Gallery');
 const Service = require('../models/Service');
 const Review = require('../models/Review');
+const Ad = require('../models/Ad');
 const upload = require('../utils/upload');
 const { uploadBuffer, destroy: destroyCloudinary } = require('../utils/cloudinary');
 
@@ -443,6 +444,43 @@ router.post('/clinic-gallery/:id/delete', asyncHandler(async (req, res) => {
   const photo = await Gallery.findOneAndDelete({ _id: req.params.id, category: 'Clinic' });
   if (photo && photo.cloudinaryPublicId) await destroyCloudinary(photo.cloudinaryPublicId);
   res.redirect('/admin/clinic-gallery');
+}));
+
+/* ---------------- AD SLIDER ---------------- */
+
+router.get('/ads', asyncHandler(async (req, res) => {
+  const ads = await Ad.find({}).sort({ order: 1, createdAt: -1 });
+  res.render('admin/ads', { title: 'Ad Slider', ads, error: null });
+}));
+
+router.post('/ads', upload.single('photo'), asyncHandler(async (req, res) => {
+  try {
+    if (!req.file) throw new Error('Please choose an image to upload.');
+    const { title, order } = req.body;
+
+    const folder = 'hiks-dental/ads';
+    const uploaded = await uploadBuffer(req.file.buffer, folder);
+
+    await Ad.create({
+      title: title && title.trim() ? title.trim() : undefined,
+      order: Number(order) || 0,
+      imageUrl: uploaded.secure_url,
+      cloudinaryPublicId: uploaded.public_id
+    });
+    if (wantsJson(req)) return res.json({ success: true });
+    res.redirect('/admin/ads');
+  } catch (err) {
+    const message = err.message || 'Could not upload ad image.';
+    if (wantsJson(req)) return res.status(400).json({ success: false, error: message });
+    const ads = await Ad.find({}).sort({ order: 1, createdAt: -1 });
+    res.status(400).render('admin/ads', { title: 'Ad Slider', ads, error: message });
+  }
+}));
+
+router.post('/ads/:id/delete', asyncHandler(async (req, res) => {
+  const ad = await Ad.findByIdAndDelete(req.params.id);
+  if (ad && ad.cloudinaryPublicId) await destroyCloudinary(ad.cloudinaryPublicId);
+  res.redirect('/admin/ads');
 }));
 
 router.post('/gallery', upload.single('photo'), asyncHandler(async (req, res) => {

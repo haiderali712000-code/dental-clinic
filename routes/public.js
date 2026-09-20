@@ -11,6 +11,7 @@ const { sendNewAppointmentEmail } = require('../utils/mailer');
 const Gallery = require('../models/Gallery');
 const Review = require('../models/Review');
 const upload = require('../utils/upload');
+const Ad = require('../models/Ad');
 
 const getCanonical = (req) => `${req.protocol}://${req.get('host')}${req.path === '/' ? '/' : req.path}`;
 
@@ -24,7 +25,8 @@ router.get('/', asyncHandler(async (req, res) => {
   ]);
   const services = await getServices();
   const reviews = await Review.find({}).sort({ createdAt: -1 });
-  res.render('index', { title: 'Home', doctors, ceo, teamMembers, services, treatmentResults, clinicGallery, reviews, canonicalUrl: getCanonical(req) });
+  const ads = await Ad.find({ active: true }).sort({ order: 1, createdAt: -1 });
+  res.render('index', { title: 'Home', doctors, ceo, teamMembers, services, treatmentResults, clinicGallery, reviews, ads, canonicalUrl: getCanonical(req) });
 }));
 
 router.get('/doctors', asyncHandler(async (req, res) => {

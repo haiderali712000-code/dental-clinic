@@ -43,6 +43,51 @@
   </div>
 </section>
 
+<% if (ads && ads.length) { %>
+<section class="ad-slider-section">
+  <style>
+    .ad-slider-section {
+      overflow: hidden;
+      padding: 24px 0;
+      background: #fff;
+    }
+    .ad-slider-track {
+      display: flex;
+      width: max-content;
+      animation: ad-slider-scroll <%= Math.max(ads.length * 6, 20) %>s linear infinite;
+    }
+    .ad-slider-track:hover {
+      animation-play-state: paused;
+    }
+    .ad-slide {
+      flex: 0 0 auto;
+      margin: 0 12px;
+      height: 160px;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    }
+    .ad-slide img {
+      height: 100%;
+      width: auto;
+      display: block;
+      object-fit: cover;
+    }
+    @keyframes ad-slider-scroll {
+      from { transform: translateX(0); }
+      to { transform: translateX(-50%); }
+    }
+  </style>
+  <div class="ad-slider-track">
+    <% [...ads, ...ads].forEach(function(ad) { %>
+      <div class="ad-slide">
+        <img src="<%= ad.imageUrl %>" alt="<%= ad.title || 'Offer' %>" />
+      </div>
+    <% }) %>
+  </div>
+</section>
+<% } %>
+
 <section class="section reference-section" id="services">
   <div class="container">
     <div class="section-heading reference-heading">
